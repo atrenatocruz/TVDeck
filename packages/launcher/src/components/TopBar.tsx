@@ -1,5 +1,4 @@
 import { useEffect, useState } from "preact/hooks";
-import { greeting } from "../tileInfo.ts";
 import { devices, focusId, overlay, PHONES_ID, status } from "../store.ts";
 
 function useNow(): Date {
@@ -21,55 +20,51 @@ const LINK_TEXT = {
   connecting: "Connecting",
   connected: "Connected",
   reconnecting: "Reconnecting",
-  unauthorized: "Launcher not authorised",
+  unauthorized: "Not authorised",
 } as const;
 
+/** Quiet corner chrome: a small mark on the left; connection, settings and the time on the right. */
 export function TopBar() {
   const now = useNow();
-  const parts = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).formatToParts(now);
-  const time = parts.filter((p) => p.type === "hour" || p.type === "literal" || p.type === "minute").map((p) => p.value).join("").trim();
-  const period = parts.find((p) => p.type === "dayPeriod")?.value;
+  const time = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(now);
   const date = new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long" }).format(now);
   const s = status.value;
+  const focused = focusId.value === PHONES_ID;
+  const count = devices.value?.length;
 
   return (
-    <header class="topbar">
-      <div class="top-left">
-        <div class="brand" aria-label="TVDeck">
-          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-            <rect x="2" y="9" width="28" height="19" rx="6" class="bm-back" />
-            <rect x="2" y="4" width="28" height="19" rx="6" class="bm-front" />
-            <circle cx="16" cy="13.5" r="3.4" class="bm-dot" />
-          </svg>
-          <span class="brand-name">TVDeck</span>
-          <span class="link" data-status={s} role="status" aria-live="polite">
-            <i class="link-dot" />
-            {s !== "connected" ? <span class="link-text">{LINK_TEXT[s]}</span> : null}
-          </span>
-        </div>
+    <header class="topbar" data-awake={focused ? "" : undefined}>
+      <svg class="brand-mark" viewBox="0 0 32 32" role="img" aria-label="TVDeck">
+        <rect x="2" y="9" width="28" height="19" rx="6" class="bm-back" />
+        <rect x="2" y="4" width="28" height="19" rx="6" class="bm-front" />
+      </svg>
+      <div class="corner">
+        <span class="link" data-status={s} role="status" aria-live="polite">
+          <i class="link-dot" />
+          <span class="link-text">{LINK_TEXT[s]}</span>
+        </span>
         <button
-          class="phones"
+          class="gear"
           type="button"
           tabIndex={-1}
-          data-focused={focusId.value === PHONES_ID ? "" : undefined}
-          onMouseEnter={() => (focusId.value = PHONES_ID)}
+          aria-label="Phones"
+          data-focused={focused ? "" : undefined}
+          onPointerMove={(e) => (e.movementX || e.movementY) && focusId.value !== PHONES_ID && (focusId.value = PHONES_ID)}
           onClick={() => (overlay.value = { kind: "devices" })}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="phones-glyph">
-            <rect x="6.5" y="2.5" width="11" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="1.7" />
-            <path d="M10.5 18.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-          </svg>
-          Phones
-          {devices.value ? <span class="phones-count">{devices.value.length}</span> : null}
+          <span class="gear-label">Phones{count ? ` \u00b7 ${count}` : ""}</span>
+          <span class="gear-disc">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="3.6" stroke-dasharray="2.6 2.6" />
+              <circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="2.2" />
+              <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="2" />
+            </svg>
+          </span>
         </button>
-        <h1 class="greeting">{greeting(now)}</h1>
-      </div>
-      <div class="top-right">
-        <div class="clock">
+        <div class="clock" title={date}>
           <span class="clock-time">{time}</span>
-          {period ? <span class="clock-period">{period}</span> : null}
+          <span class="clock-date">{date}</span>
         </div>
-        <div class="date">{date}</div>
       </div>
     </header>
   );

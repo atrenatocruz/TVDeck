@@ -38,8 +38,8 @@ Rows appear top to bottom, tiles left to right. Empty rows are skipped.
 | `url` | web, uri | The address to open. |
 | `path` | exe, folder | File or folder path. `%NAME%` environment variables are expanded, for example `%USERPROFILE%\\Videos`. |
 | `args` | no | Command-line arguments for `exe` tiles, as a list of strings. |
-| `icon` | no | A file name inside `config/icons/` (png, jpg, webp, svg). Shown instead of the wordmark. |
-| `accent` | no | A CSS colour such as `#e5384a`, `rgb(...)` or `hsl(...)`. Tints the tile gradient and the screen glow when the tile is focused. Without it, a colour is derived from the `id`. |
+| `icon` | no | A file name inside `config/icons/` (png, jpg, webp, svg). Shown as the app icon and, large, in the top shelf while the tile is focused. Without it, the title is drawn as a wordmark. |
+| `accent` | no | A CSS colour such as `#e5384a`, `rgb(...)` or `hsl(...)`. Colours the ambient light behind the top shelf while the tile is focused, and the icon's surface when the logo is white. Without it, a colour is derived from the `id`. |
 | `backKey` | no | `esc` (default) or `browserBack` (Alt+Left). Which key the remote's Back button sends while this app is in front. Use `browserBack` for websites where Esc does the wrong thing (it leaves fullscreen video, for example). |
 | `userAgent` | no | Web tiles only. `tv` makes Edge identify as a smart-TV browser, so sites with a TV interface serve it (YouTube: use `https://www.youtube.com/tv` with `backKey: "esc"`). Any other value is used as the full user-agent string. Each user agent gets its own Edge profile, so you sign in to it separately. |
 | `match` | no | How to recognise the app's window: `{ "process": "steamwebhelper.exe", "titleRegex": "Big Picture" }`. Both parts are optional, case-insensitive, and must both hold when both are given. See "How windows are tracked". |
@@ -69,7 +69,7 @@ TVDeck ships no logos. To use your own, put an image in `config/icons/` and refe
 { "id": "plex", "title": "Plex", "type": "web", "url": "https://app.plex.tv", "icon": "plex.png", "accent": "#e5a00d" }
 ```
 
-Wide or square images with a transparent background look best. They are shown at about 60 percent of the tile, centred, and the file name's folder is served at `/icons/`.
+Wide or square images with a transparent background look best; they are centred on the icon. The launcher looks at the logo's pixels and picks the icon surface by itself: white logos sit on the tile's `accent` (darkened if needed so white stays readable), near-black logos on a light neutral, and coloured or two-tone logos (YouTube's red and white) on a dark neutral. If the `accent` of a near-black tile is grey (Netflix), the top shelf glows in the logo's own colour instead. The icons folder is served at `/icons/`.
 
 ## TV interfaces
 

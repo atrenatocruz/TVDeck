@@ -1,20 +1,23 @@
 import type { Tile as TileData } from "@tvdeck/protocol";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
+import { Hero } from "./components/Hero.tsx";
 import { Tile } from "./components/Tile.tsx";
 import { Toasts } from "./components/Toasts.tsx";
 import { Overlays } from "./components/Overlays.tsx";
 import { TopBar } from "./components/TopBar.tsx";
-import { navigate, scrollIntoRow, type Dir, type FocusRect, type RowMemory } from "./nav/spatial.ts";
+import { navigateWithControls, scrollIntoRow, type Dir, type FocusRect, type RowMemory } from "./nav/spatial.ts";
 import { Spring } from "./spring.ts";
 import { beginOpening, config, configError, focusId, opening, overlay, PHONES_ID, pushToast, running, status, toasts } from "./store.ts";
-import { accentOf } from "./tileInfo.ts";
+import { backdropColor, accentOf } from "./tileInfo.ts";
+import { logoInfo } from "./logoTone.ts";
+import { tilts } from "./tilt.ts";
 import { send } from "./ws.ts";
 
 /** Layout is authored for 1920x1080; everything scales from this unit. */
 const unit = () => Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-const ANCHOR = 300; // where the focused row's title sits, in units, regardless of which row it is
-const MARGIN_L = 120;
-const MARGIN_R = 230;
+const ANCHOR = 650; // where the focused row sits, in units, regardless of which row it is (the page pads by the same amount)
+const MARGIN_L = 90;
+const MARGIN_R = 90;
 
 const KEY_DIR: Record<string, Dir> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
 
@@ -172,18 +175,20 @@ export function App() {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (overlay.value) return; // overlays handle their own keys
       const dir = KEY_DIR[e.key];
-      const onPhones = focusId.value === PHONES_ID;
       if (dir) {
         e.preventDefault();
-        if (onPhones) {
-          if (dir === "down" && allTiles.length) focusId.value = memory.get(0) ?? allTiles[0]!.t.id;
-          return;
+        const cur = focusId.value;
+        const next = navigateWithControls(readRects(), cur, dir, memory, PHONES_ID);
+        if (next && next !== cur) {
+          if (next === PHONES_ID) focusId.value = PHONES_ID;
+          else setFocus(next);
+          tilts.get(next)?.nudge(dir, true);
+        } else if (cur && cur !== PHONES_ID) {
+          tilts.get(cur)?.nudge(dir); // nothing further that way: the icon leans into the edge
         }
-        const next = navigate(readRects(), focusId.value, dir, memory);
-        if (next) setFocus(next);
-        else if (dir === "up" && focused?.ri === 0) focusId.value = PHONES_ID;
         return;
       }
+      const onPhones = focusId.value === PHONES_ID;
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         if (e.repeat) return;
@@ -200,22 +205,24 @@ export function App() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const washAccent = focused ? accentOf(focused.t) : "#7f8cff";
+  // the hero keeps showing the last tile while the corner controls hold focus
+  const lastTile = useRef<string | null>(null);
+  if (focused) lastTile.current = focused.t.id;
+  const heroTile = (focused ?? allTiles.find((x) => x.t.id === lastTile.current) ?? allTiles[0])?.t ?? null;
+  const washAccent = heroTile ? backdropColor(accentOf(heroTile), logoInfo(heroTile.icon)?.rgb ?? null) : "#5b6180";
+  const activeRow = focused?.ri ?? (allTiles.find((x) => x.t.id === heroTile?.id)?.ri ?? 0);
   const s = status.value;
   let introStep = 0;
 
   return (
     <div class="app" data-overlay={overlay.value ? "" : undefined} data-intro={intro && cfg ? "" : undefined}>
-      <div class="ambient" aria-hidden="true">
-        <i class="aurora a1" />
-        <i class="aurora a2" />
-      </div>
       <Wash accent={washAccent} />
+      <Hero tiles={allTiles.map((x) => x.t)} activeId={heroTile?.id ?? null} />
       <TopBar />
       <main class="viewport">
         <div class="page" ref={pageRef}>
           {rows.map((row, ri) => (
-            <section class="row" key={`${ri}:${row.title}`} data-row={ri} data-active={focused?.ri === ri ? "" : undefined} aria-label={row.title}>
+            <section class="row" key={`${ri}:${row.title}`} data-row={ri} data-pos={ri < activeRow ? "above" : ri > activeRow ? "below" : "active"} aria-label={row.title}>
               <h2 class="row-title">{row.title}</h2>
               <div class="track">
                 {row.tiles.map((t: TileData, ti) => (
@@ -227,7 +234,7 @@ export function App() {
                     focused={focusId.value === t.id}
                     running={running.value.includes(t.id)}
                     opening={opening.value?.id === t.id}
-                    rowActive={focused?.ri === ri}
+                    rowActive={activeRow === ri}
                     intro={intro ? introStep++ : undefined}
                     onHover={() => focusId.value !== t.id && setFocus(t.id)}
                     onOpen={() => {

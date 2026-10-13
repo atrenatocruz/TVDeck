@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { navigate, pickNext, scrollIntoRow, type FocusRect, type RowMemory } from "./spatial.ts";
+import { navigate, navigateWithControls, pickNext, scrollIntoRow, type FocusRect, type RowMemory } from "./spatial.ts";
 
 /** rows of tiles 100x60 with 20px gaps; row pitch 100. */
 function grid(counts: number[], xOffset: number[] = []): FocusRect[] {
@@ -80,5 +80,24 @@ describe("scrollIntoRow", () => {
     expect(scrollIntoRow(800, 500, 860, 1920, 4000, 120, 220)).toBe(380);
     expect(scrollIntoRow(0, 3700, 4060, 1920, 4000, 120, 220)).toBe(2080);
     expect(scrollIntoRow(50, 120, 480, 1920, 1000, 120, 220)).toBe(0);
+  });
+});
+
+describe("navigateWithControls", () => {
+  const rects = grid([3, 3]);
+  const C = "@phones";
+  it("reaches the corner controls with Up from the first row only", () => {
+    expect(navigateWithControls(rects, "r0c1", "up", new Map(), C)).toBe(C);
+    expect(navigateWithControls(rects, "r1c1", "up", new Map(), C)).toBe("r0c1");
+  });
+  it("comes back down to the remembered tile of the first row", () => {
+    expect(navigateWithControls(rects, C, "down", new Map([[0, "r0c2"]]), C)).toBe("r0c2");
+    expect(navigateWithControls(rects, C, "down", new Map(), C)).toBe("r0c0");
+    expect(navigateWithControls(rects, C, "down", new Map([[0, "gone"]]), C)).toBe("r0c0");
+  });
+  it("ignores other keys on the controls and edges elsewhere", () => {
+    for (const d of ["up", "left", "right"] as const) expect(navigateWithControls(rects, C, d, new Map(), C)).toBeNull();
+    expect(navigateWithControls(rects, "r1c2", "down", new Map(), C)).toBeNull();
+    expect(navigateWithControls(rects, "r0c0", "left", new Map(), C)).toBeNull();
   });
 });

@@ -94,3 +94,23 @@ export function scrollIntoRow(current: number, tileLeft: number, tileRight: numb
   if (tileLeft - s < marginLeft) s = tileLeft - marginLeft;
   return Math.max(0, Math.min(s, Math.max(0, contentWidth - viewport)));
 }
+
+/**
+ * `navigate` plus the corner controls (settings), which sit above the first row: Up from the
+ * first row reaches them, Down returns to that row's remembered tile, and the other directions
+ * stay put. `null` means the key does nothing.
+ */
+export function navigateWithControls(rects: readonly FocusRect[], currentId: string | null, dir: Dir, memory: RowMemory, controlId: string): string | null {
+  if (currentId === controlId) {
+    if (dir !== "down" || rects.length === 0) return null;
+    const firstRow = Math.min(...rects.map((r) => r.row));
+    const inRow = rects.filter((r) => r.row === firstRow);
+    const remembered = memory.get(firstRow);
+    return (remembered && inRow.some((r) => r.id === remembered) ? remembered : inRow[0]?.id) ?? null;
+  }
+  const next = navigate(rects, currentId, dir, memory);
+  if (next) return next;
+  const cur = rects.find((r) => r.id === currentId);
+  if (dir === "up" && cur && cur.row === Math.min(...rects.map((r) => r.row))) return controlId;
+  return null;
+}
