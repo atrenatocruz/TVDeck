@@ -8,6 +8,24 @@ export const status = signal<LinkStatus>("connecting");
 export const config = signal<TilesConfig | null>(null);
 export const configError = signal<string | null>(null);
 export const focusId = signal<string | null>(null);
+/** tileIds that currently have a live window (from the server's `state`). */
+export const running = signal<string[]>([]);
+export const frontState = signal<{ foreground: "launcher" | "app" | "other"; tileId?: string }>({ foreground: "launcher" });
+
+const OPENING_MAX_MS = 12_000;
+/** The tile the user just opened, until it is in front, an error arrives or 12 s pass. */
+export const opening = signal<{ id: string; since: number } | null>(null);
+let openingTimer: number | undefined;
+
+export function beginOpening(id: string): void {
+  opening.value = { id, since: Date.now() };
+  clearTimeout(openingTimer);
+  openingTimer = window.setTimeout(endOpening, OPENING_MAX_MS);
+}
+export function endOpening(): void {
+  clearTimeout(openingTimer);
+  opening.value = null;
+}
 
 export interface Toast {
   id: number;

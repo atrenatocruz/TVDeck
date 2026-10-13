@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLauncherArgs, launcherUrl } from "./edge.ts";
+import { buildLauncherArgs, buildWebArgs, launcherUrl } from "./edge.ts";
 
 describe("buildLauncherArgs", () => {
   const args = buildLauncherArgs({ dataDir: "C:\\Data\\TVDeck", port: 7420, key: "ab-_c" });
@@ -12,5 +12,17 @@ describe("buildLauncherArgs", () => {
   it("puts the key in the fragment, never the query", () => {
     expect(launcherUrl(1, "k")).toBe("http://localhost:1/launcher/#k=k");
     expect(launcherUrl(1, "a b")).toContain("#k=a%20b");
+  });
+});
+
+describe("buildWebArgs", () => {
+  const args = buildWebArgs({ dataDir: "C:\\Data\\TVDeck", url: "https://www.youtube.com" });
+  it("uses the persistent apps profile, app mode and fullscreen", () => {
+    expect(args).toContain("--user-data-dir=C:\\Data\\TVDeck\\edge-apps");
+    expect(args).toContain("--app=https://www.youtube.com");
+    expect(args).toContain("--start-fullscreen");
+    expect(args).toContain("--no-first-run");
+    expect(args).toContain("--no-default-browser-check");
+    expect(args).toContain("--autoplay-policy=no-user-gesture-required");
   });
 });

@@ -7,13 +7,17 @@ interface Props {
   index: number;
   focused: boolean;
   rowActive: boolean;
+  /** The tile has a live window behind the launcher. */
+  running: boolean;
+  /** The user just opened it and it is not in front yet. */
+  opening: boolean;
   /** Entrance stagger step; undefined once the intro has played. */
   intro?: number;
   onHover(): void;
   onOpen(): void;
 }
 
-export function Tile({ tile, row, index, focused, rowActive, intro, onHover, onOpen }: Props) {
+export function Tile({ tile, row, index, focused, rowActive, running, opening, intro, onHover, onOpen }: Props) {
   const accent = accentOf(tile);
   const lum = luminance(accent);
   const hasIcon = !!tile.icon;
@@ -28,6 +32,9 @@ export function Tile({ tile, row, index, focused, rowActive, intro, onHover, onO
         data-tile={tile.id}
         data-focused={focused ? "" : undefined}
         data-row-active={rowActive ? "" : undefined}
+        data-running={running ? "" : undefined}
+        data-opening={opening ? "" : undefined}
+        aria-busy={opening || undefined}
         data-kind={hasIcon ? "icon" : "wordmark"}
         data-ink={lum !== null && lum > 0.55 ? "dark" : "light"}
         tabIndex={-1}
@@ -43,12 +50,14 @@ export function Tile({ tile, row, index, focused, rowActive, intro, onHover, onO
             <span class="tile-wordmark">{tile.title}</span>
           )}
           <span class="tile-shade" aria-hidden="true" />
+          <span class="tile-sweep" aria-hidden="true" />
         </span>
+        <span class="tile-live" aria-hidden="true" />
         <span class="tile-ring" aria-hidden="true" />
       </button>
       <div class="caption" aria-hidden="true">
         {hasIcon ? <span class="cap-title">{tile.title}</span> : null}
-        <span class="cap-sub">{tileSub(tile)}</span>
+        <span class="cap-sub">{opening ? "Opening" : running ? "Running" : tileSub(tile)}</span>
       </div>
     </div>
   );

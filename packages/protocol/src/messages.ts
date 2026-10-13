@@ -74,6 +74,8 @@ export const ServerMsg = z.discriminatedUnion("type", [
     type: z.literal("state"),
     foreground: z.enum(["launcher", "app", "other"]),
     tileId: z.string().optional(),
+    /** tileIds that currently have a live window (optional: older servers omit it). */
+    running: z.array(z.string()).optional(),
   }),
   z.object({ type: z.literal("pairingCode"), url: z.string(), expiresAt: z.number() }),
   z.object({ type: z.literal("devices"), list: z.array(DeviceInfo) }),

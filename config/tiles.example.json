@@ -3,12 +3,12 @@
     {
       "title": "Watch",
       "tiles": [
-        { "id": "netflix", "title": "Netflix", "type": "web", "url": "https://www.netflix.com/browse", "accent": "#e5384a" },
-        { "id": "youtube", "title": "YouTube", "type": "web", "url": "https://www.youtube.com", "accent": "#ff5a4d" },
-        { "id": "disney", "title": "Disney+", "type": "web", "url": "https://www.disneyplus.com", "accent": "#3b6bff" },
-        { "id": "prime", "title": "Prime Video", "type": "web", "url": "https://www.primevideo.com", "accent": "#18a8e8" },
-        { "id": "hbo", "title": "HBO Max", "type": "web", "url": "https://play.hbomax.com", "accent": "#8b4dff" },
-        { "id": "stremio", "title": "Stremio", "type": "web", "url": "https://web.stremio.com", "accent": "#6f5cff" }
+        { "id": "netflix", "title": "Netflix", "type": "web", "url": "https://www.netflix.com/browse", "accent": "#e5384a", "backKey": "browserBack" },
+        { "id": "youtube", "title": "YouTube", "type": "web", "url": "https://www.youtube.com", "accent": "#ff5a4d", "backKey": "browserBack" },
+        { "id": "disney", "title": "Disney+", "type": "web", "url": "https://www.disneyplus.com", "accent": "#3b6bff", "backKey": "browserBack" },
+        { "id": "prime", "title": "Prime Video", "type": "web", "url": "https://www.primevideo.com", "accent": "#18a8e8", "backKey": "browserBack" },
+        { "id": "hbo", "title": "HBO Max", "type": "web", "url": "https://play.hbomax.com", "accent": "#8b4dff", "backKey": "browserBack" },
+        { "id": "stremio", "title": "Stremio", "type": "web", "url": "https://web.stremio.com", "accent": "#6f5cff", "backKey": "browserBack" }
       ]
     },
     {
@@ -20,7 +20,7 @@
           "type": "uri",
           "url": "steam://open/bigpicture",
           "accent": "#2f8fc4",
-          "match": { "process": "steamwebhelper.exe", "titleRegex": "Steam Big Picture Mode" }
+          "match": { "process": "steamwebhelper.exe", "titleRegex": "Big Picture" }
         }
       ]
     },
@@ -33,7 +33,8 @@
           "type": "exe",
           "path": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
           "args": ["--fullscreen"],
-          "accent": "#ff9a2e"
+          "accent": "#ff9a2e",
+          "match": { "process": "vlc.exe" }
         },
         { "id": "videos", "title": "Videos", "type": "folder", "path": "%USERPROFILE%\\Videos", "accent": "#2fc9a0" }
       ]

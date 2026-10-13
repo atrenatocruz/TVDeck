@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseClientMsg, PROTOCOL_VERSION, TilesConfig } from "./index.ts";
+import { parseClientMsg, PROTOCOL_VERSION, ServerMsg, TilesConfig } from "./index.ts";
 
 describe("parseClientMsg", () => {
   it("accepts a valid hello", () => {
@@ -30,5 +30,13 @@ describe("TilesConfig", () => {
     const dup = { id: "a", title: "A", type: "web", url: "https://example.com" };
     expect(TilesConfig.safeParse({ rows: [{ title: "A", tiles: [dup, dup] }] }).success).toBe(false);
     expect(TilesConfig.safeParse({ rows: [{ title: "A", tiles: [dup] }] }).success).toBe(true);
+  });
+});
+
+describe("ServerMsg state", () => {
+  it("accepts state with and without running (backwards compatible)", () => {
+    expect(ServerMsg.safeParse({ type: "state", foreground: "launcher" }).success).toBe(true);
+    expect(ServerMsg.safeParse({ type: "state", foreground: "app", tileId: "yt", running: ["yt", "vlc"] }).success).toBe(true);
+    expect(ServerMsg.safeParse({ type: "state", foreground: "app", running: [1] }).success).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadOrCreateSecrets } from "./auth/sharedToken.ts";
 import { ensureLauncher, registerLauncher } from "./apps/launcher.ts";
+import { createAppService } from "./apps/service.ts";
 import { ensureTilesFile } from "./config/load.ts";
 import { watchTiles } from "./config/watch.ts";
 import { createHttp } from "./http.ts";
@@ -41,8 +42,14 @@ async function main() {
   let broadcast: (s: import("./config/watch.ts").TilesState) => void = () => {};
   const tiles = watchTiles(TILES_FILE, (s) => broadcast(s));
   const { server, close } = await createHttp({ production, version });
-  const ws = attachWebSocket(server, { sharedToken: token, launcherKey }, version, tiles.current);
+  let broadcastState: (s: import("./apps/service.ts").StateMsg) => void = () => {};
+  const apps = createAppService(
+    () => tiles.current().config.rows.flatMap((r) => r.tiles),
+    (s) => broadcastState(s),
+  );
+  const ws = attachWebSocket(server, { sharedToken: token, launcherKey }, version, tiles.current, apps);
   broadcast = ws.broadcastTiles;
+  broadcastState = ws.broadcastState;
 
   server.on("error", (e: NodeJS.ErrnoException) => {
     log.error("http", e.code === "EADDRINUSE" ? `port ${port} is already in use (set TVDECK_PORT)` : e.message);
@@ -68,11 +75,13 @@ async function main() {
   log.info("http", `listening on 0.0.0.0:${port}`);
 
   registerLauncher(port, launcherKey);
+  apps.start();
   if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
   else void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
 
   const shutdown = async () => {
     log.info("main", "shutting down");
+    apps.stop();
     ws.close();
     tiles.close();
     await close();

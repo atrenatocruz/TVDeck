@@ -25,3 +25,20 @@ export function buildLauncherArgs(o: LauncherArgsOpts): string[] {
     "--autoplay-policy=no-user-gesture-required",
   ];
 }
+
+export interface WebArgsOpts {
+  dataDir: string;
+  url: string;
+}
+
+/** Arguments for a web tile: its own fullscreen app window in the shared, persistent "apps" profile. */
+export function buildWebArgs(o: WebArgsOpts): string[] {
+  return [
+    `--user-data-dir=${path.join(o.dataDir, "edge-apps")}`,
+    `--app=${o.url}`,
+    "--start-fullscreen",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--autoplay-policy=no-user-gesture-required",
+  ];
+}

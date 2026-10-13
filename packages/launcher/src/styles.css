@@ -445,6 +445,60 @@ code {
   color: var(--text-2);
 }
 
+/* ---------- running + opening ---------- */
+/* Running: one small lit dot in the corner, the accent colour on a dark chip. Static on purpose. */
+.tile-live {
+  position: absolute;
+  top: calc(16 * var(--u));
+  right: calc(16 * var(--u));
+  width: calc(14 * var(--u));
+  height: calc(14 * var(--u));
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow:
+    0 0 0 calc(5 * var(--u)) rgb(8 10 14 / 0.62),
+    0 0 calc(16 * var(--u)) var(--ok);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 260ms ease,
+    transform 420ms var(--spring);
+  pointer-events: none;
+}
+.tile[data-running] .tile-live {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Opening: the face dims a touch and a soft band of light travels across it. */
+.tile-sweep {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.3) 50%, transparent 70%) 0 0 / 220% 100% no-repeat,
+    rgb(6 8 12 / 0.34);
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+.tile[data-opening] .tile-sweep {
+  opacity: 1;
+  animation: sweep 1.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+.tile[data-opening] .tile-live {
+  opacity: 0;
+}
+.slot:has([data-opening]) .cap-sub {
+  color: var(--text-1);
+}
+@keyframes sweep {
+  from {
+    background-position: 130% 0, 0 0;
+  }
+  to {
+    background-position: -30% 0, 0 0;
+  }
+}
+
 /* ---------- entrance: one orchestrated moment ---------- */
 .app[data-intro] .topbar,
 .app[data-intro] .row-title {
@@ -584,6 +638,9 @@ code {
   .aurora,
   .link-dot {
     animation: none !important;
+  }
+  .tile[data-opening] .tile-sweep {
+    animation: none;
   }
   .tile,
   .tile[data-focused][data-pressed] {

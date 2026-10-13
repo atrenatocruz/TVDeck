@@ -1,6 +1,6 @@
 import type { ClientMsg, ServerMsg } from "@tvdeck/protocol";
 import { batch } from "@preact/signals";
-import { config, configError, pushToast, status } from "./store.ts";
+import { config, configError, endOpening, frontState, opening, pushToast, running, status } from "./store.ts";
 
 const UNAUTHORIZED = 4001;
 const KEY_KEY = "tvdeck.launcherKey";
@@ -54,7 +54,18 @@ function onMessage(msg: ServerMsg): void {
         configError.value = msg.error ?? null;
       });
       break;
+    case "state":
+      batch(() => {
+        running.value = msg.running ?? [];
+        frontState.value = { foreground: msg.foreground, ...(msg.tileId ? { tileId: msg.tileId } : {}) };
+        const op = opening.value;
+        if (op && msg.foreground === "app" && msg.tileId === op.id) endOpening();
+        // Home pressed while an app was still opening: stop showing the spinner once the launcher is back for a moment
+        else if (op && msg.foreground === "launcher" && Date.now() - op.since > 2500) endOpening();
+      });
+      break;
     case "error":
+      if (msg.code === "launch_failed") endOpening();
       if (msg.code === "unauthorized") markUnauthorized();
       else pushToast(msg.message, msg.code === "launch_failed" ? "info" : "warn");
       break;

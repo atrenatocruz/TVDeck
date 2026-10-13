@@ -40,8 +40,8 @@ Rows appear top to bottom, tiles left to right. Empty rows are skipped.
 | `args` | no | Command-line arguments for `exe` tiles, as a list of strings. |
 | `icon` | no | A file name inside `config/icons/` (png, jpg, webp, svg). Shown instead of the wordmark. |
 | `accent` | no | A CSS colour such as `#e5384a`, `rgb(...)` or `hsl(...)`. Tints the tile gradient and the screen glow when the tile is focused. Without it, a colour is derived from the `id`. |
-| `backKey` | no | `esc` (default) or `browserBack` (Alt+Left). Which key the remote's Back button sends while this app is in front. Used from Milestone 3. |
-| `match` | no | How to recognise the app's window once it is open: `{ "process": "steamwebhelper.exe", "titleRegex": "Steam Big Picture Mode" }`. Both parts are optional. Used from Milestone 3. |
+| `backKey` | no | `esc` (default) or `browserBack` (Alt+Left). Which key the remote's Back button sends while this app is in front. Use `browserBack` for websites where Esc does the wrong thing (it leaves fullscreen video, for example). |
+| `match` | no | How to recognise the app's window: `{ "process": "steamwebhelper.exe", "titleRegex": "Big Picture" }`. Both parts are optional, case-insensitive, and must both hold when both are given. See "How windows are tracked". |
 
 ### Tile types
 
@@ -50,7 +50,15 @@ Rows appear top to bottom, tiles left to right. Empty rows are skipped.
 - `uri`: anything Windows can open by address, such as `steam://open/bigpicture`.
 - `folder`: opens a folder in Explorer. Example: `{ "type": "folder", "path": "%USERPROFILE%\\Videos" }`.
 
-Opening apps arrives in Milestone 3. Until then, pressing OK on a tile shows a message saying so.
+### How windows are tracked
+
+Opening a tile brings its window to the front if TVDeck already knows it. Otherwise, if the tile has a `match` and a visible window matches, that window is adopted. Failing that, TVDeck launches the app and adopts the first new window that appears (preferring one that matches `match`). Folder tiles adopt the new Explorer window. Close the window yourself and the next OK starts the app again.
+
+Tips:
+
+- **Steam Big Picture** (`steam://open/bigpicture`): the window belongs to `steamwebhelper.exe` and has "Big Picture" in its title. Steam must be signed in; if it is not, the sign-in window is adopted instead. Allow up to 15 s on a cold start.
+- **VLC**: `type: "exe"` with `"args": ["--fullscreen"]` and `"match": { "process": "vlc.exe" }`. VLC reuses a running instance, so the match lets Home and OK find it again. Adjust `path` if VLC is installed elsewhere.
+- Not sure what to put in `match`? Open the app, then look at its window title and process name in Task Manager (Details tab).
 
 ## Icons
 

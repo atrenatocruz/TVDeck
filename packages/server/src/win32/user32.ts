@@ -34,11 +34,18 @@ export interface Native {
   GetCurrentThreadId(): number;
   GetCursorPos(): { x: number; y: number };
   ProcessImagePath(pid: number): string | null;
+  /** GetAncestor(hwnd, GA_ROOTOWNER) */
+  GetRootOwner(hwnd: number): number;
+  GetExStyle(hwnd: number): number;
+  GetWindowSize(hwnd: number): { w: number; h: number };
+  IsCloaked(hwnd: number): boolean;
 }
 
 export const WM_CLOSE = 0x0010;
 export const SW_MINIMIZE = 6;
 export const SW_RESTORE = 9;
+export const WS_EX_TOOLWINDOW = 0x80;
+export const WS_EX_NOACTIVATE = 0x08000000;
 
 function makeStub(): Native {
   const warn = (n: string) => console.warn(`[win32] ${n} ignored: not running on Windows`);
@@ -63,6 +70,10 @@ function makeStub(): Native {
     GetCurrentThreadId: () => 0,
     GetCursorPos: () => ({ x: 0, y: 0 }),
     ProcessImagePath: () => null,
+    GetRootOwner: () => 0,
+    GetExStyle: () => 0,
+    GetWindowSize: () => ({ w: 0, h: 0 }),
+    IsCloaked: () => false,
   };
 }
 
@@ -83,6 +94,8 @@ function makeNative(): Native {
   const INPUT_SIZE = koffi.sizeof(INPUT);
   if (INPUT_SIZE !== 40) throw new Error(`INPUT struct is ${INPUT_SIZE} bytes, expected 40 (x64 only)`);
   koffi.struct("POINT", { x: "int32", y: "int32" });
+  koffi.struct("RECT", { left: "int32", top: "int32", right: "int32", bottom: "int32" });
+  const dwmapi = koffi.load("dwmapi.dll");
 
   const EnumProc = koffi.proto("bool __stdcall EnumWindowsProc(intptr_t hwnd, intptr_t lparam)");
 
@@ -103,6 +116,10 @@ function makeNative(): Native {
     AllowSetForegroundWindow: user32.func("bool __stdcall AllowSetForegroundWindow(int32 pid)"),
     EnumWindows: user32.func("bool __stdcall EnumWindows(EnumWindowsProc *cb, intptr_t lparam)"),
     PostMessageW: user32.func("bool __stdcall PostMessageW(intptr_t hwnd, uint32 msg, uintptr_t wparam, intptr_t lparam)"),
+    GetAncestor: user32.func("intptr_t __stdcall GetAncestor(intptr_t hwnd, uint32 flags)"),
+    GetWindowLongW: user32.func("int32 __stdcall GetWindowLongW(intptr_t hwnd, int index)"),
+    GetWindowRect: user32.func("bool __stdcall GetWindowRect(intptr_t hwnd, _Out_ RECT *r)"),
+    DwmGetWindowAttribute: dwmapi.func("int32 __stdcall DwmGetWindowAttribute(intptr_t hwnd, uint32 attr, _Out_ uint32_t *val, uint32 size)"),
     GetCursorPos: user32.func("bool __stdcall GetCursorPos(_Out_ POINT *p)"),
     GetCurrentThreadId: kernel32.func("uint32 __stdcall GetCurrentThreadId()"),
     OpenProcess: kernel32.func("intptr_t __stdcall OpenProcess(uint32 access, bool inherit, uint32 pid)"),
@@ -155,6 +172,17 @@ function makeNative(): Native {
       const p = { x: 0, y: 0 };
       f.GetCursorPos(p);
       return { x: p.x, y: p.y };
+    },
+    GetRootOwner: (h) => Number(f.GetAncestor(h, 3)),
+    GetExStyle: (h) => f.GetWindowLongW(h, -20) >>> 0,
+    GetWindowSize: (h) => {
+      const r = { left: 0, top: 0, right: 0, bottom: 0 };
+      f.GetWindowRect(h, r);
+      return { w: r.right - r.left, h: r.bottom - r.top };
+    },
+    IsCloaked: (h) => {
+      const v = [0];
+      return f.DwmGetWindowAttribute(h, 14, v, 4) === 0 && (v[0] ?? 0) !== 0; // DWMWA_CLOAKED
     },
     ProcessImagePath: (pid) => {
       const h = Number(f.OpenProcess(0x1000, false, pid)); // PROCESS_QUERY_LIMITED_INFORMATION

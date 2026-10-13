@@ -1,6 +1,6 @@
 import { tick } from "./haptics.ts";
 import { Dpad } from "./views/Dpad.tsx";
-import { pcName, send, status } from "./ws.ts";
+import { frontApp, pcName, send, status, toast } from "./ws.ts";
 
 const STATUS_TEXT = {
   connecting: "Connecting",
@@ -12,17 +12,30 @@ const STATUS_TEXT = {
 function StatusPill() {
   const s = status.value;
   const name = pcName.value;
+  const front = frontApp.value;
   return (
     <header class="top">
       <div class="pill" data-status={s} role="status" aria-live="polite">
         <span class="dot" />
         <span class="pill-text">
           {STATUS_TEXT[s]}
-          {s === "connected" && name ? <span class="pill-sub"> to {name}</span> : null}
+          {s === "connected" && front ? <span class="pill-sub"> · {front}</span> : null}
+          {s === "connected" && !front && name ? <span class="pill-sub"> to {name}</span> : null}
           {s === "reconnecting" || s === "connecting" ? <span class="pill-sub">...</span> : null}
         </span>
       </div>
     </header>
+  );
+}
+
+function Toast() {
+  const t = toast.value;
+  if (!t) return null;
+  return (
+    <div class="toast" key={t.id} role="status" aria-live="polite">
+      <i class="toast-dot" />
+      <span>{t.text}</span>
+    </div>
   );
 }
 
@@ -120,6 +133,7 @@ export function App() {
         <Dpad />
         <Actions />
       </main>
+      <Toast />
       <TabBar />
     </div>
   );

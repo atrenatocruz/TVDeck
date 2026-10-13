@@ -1,5 +1,5 @@
 import path from "node:path";
-import { native } from "./user32.ts";
+import { native, WS_EX_TOOLWINDOW } from "./user32.ts";
 
 export interface WinInfo {
   hwnd: number;
@@ -9,6 +9,8 @@ export interface WinInfo {
   tid: number;
   processName: string;
   visible: boolean;
+  /** Present on windows from listTopLevelWindows(): zero-size, tool or cloaked windows set this to false. */
+  real?: boolean;
 }
 
 const procCache = new Map<number, string>();
@@ -34,10 +36,25 @@ export function describeWindow(hwnd: number): WinInfo {
   };
 }
 
+/** Visible, non-cloaked, non-tool window with a real size: something a user would call "a window". */
+export function isRealWindow(hwnd: number): boolean {
+  if (!native.IsWindowVisible(hwnd)) return false;
+  if (native.GetExStyle(hwnd) & WS_EX_TOOLWINDOW) return false;
+  const root = native.GetRootOwner(hwnd);
+  if (root && root !== hwnd) return false; // owned popups/dialogs belong to their owner's window
+  const { w, h } = native.GetWindowSize(hwnd);
+  if (w < 80 || h < 60) return false;
+  return !native.IsCloaked(hwnd);
+}
+
 export function listTopLevelWindows(): WinInfo[] {
   const handles: number[] = [];
   native.EnumWindows((h) => void handles.push(h));
-  return handles.map(describeWindow);
+  return handles.map((h) => {
+    const w = describeWindow(h);
+    w.real = w.visible && isRealWindow(h);
+    return w;
+  });
 }
 
 export function findWindow(pred: (w: WinInfo) => boolean): WinInfo | undefined {

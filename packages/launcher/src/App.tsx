@@ -5,7 +5,7 @@ import { Toasts } from "./components/Toasts.tsx";
 import { TopBar } from "./components/TopBar.tsx";
 import { navigate, scrollIntoRow, type Dir, type FocusRect, type RowMemory } from "./nav/spatial.ts";
 import { Spring } from "./spring.ts";
-import { config, configError, focusId, pushToast, status, toasts } from "./store.ts";
+import { beginOpening, config, configError, focusId, opening, pushToast, running, status, toasts } from "./store.ts";
 import { accentOf } from "./tileInfo.ts";
 import { send } from "./ws.ts";
 
@@ -161,7 +161,9 @@ export function App() {
       btn.dataset.pressed = "";
       setTimeout(() => delete btn.dataset.pressed, 220);
     }
-    if (!send({ type: "openApp", tileId: id })) pushToast("Not connected to TVDeck. Reconnecting...", "warn");
+    if (opening.value) return; // one launch at a time; the server also ignores a repeat press
+    if (send({ type: "openApp", tileId: id })) beginOpening(id);
+    else pushToast("Not connected to TVDeck. Reconnecting...", "warn");
   };
 
   useEffect(() => {
@@ -212,6 +214,8 @@ export function App() {
                     row={ri}
                     index={ti}
                     focused={focusId.value === t.id}
+                    running={running.value.includes(t.id)}
+                    opening={opening.value?.id === t.id}
                     rowActive={focused?.ri === ri}
                     intro={intro ? introStep++ : undefined}
                     onHover={() => focusId.value !== t.id && setFocus(t.id)}

@@ -8,6 +8,24 @@ const TOKEN_KEY = "tvdeck.token";
 
 export const status = signal<ConnStatus>("connecting");
 export const pcName = signal<string | null>(null);
+/** Title of the app in front on the TV, or null when it is the launcher or something else. */
+export const frontApp = signal<string | null>(null);
+export interface Toast {
+  id: number;
+  text: string;
+}
+export const toast = signal<Toast | null>(null);
+let titles = new Map<string, string>();
+let frontId: string | null = null;
+let toastTimer: number | undefined;
+let toastSeq = 0;
+
+function showToast(text: string): void {
+  clearTimeout(toastTimer);
+  toast.value = { id: ++toastSeq, text };
+  toastTimer = window.setTimeout(() => (toast.value = null), 4200);
+}
+const syncFront = () => (frontApp.value = frontId ? (titles.get(frontId) ?? null) : null);
 
 function readToken(): string | null {
   try {
@@ -77,12 +95,23 @@ function connect(): void {
     if (msg.type === "welcome") {
       attempt = 0;
       status.value = "connected";
-    } else if (msg.type === "error" && msg.code === "unauthorized") {
-      markUnpaired();
+    } else if (msg.type === "tiles") {
+      titles = new Map(msg.config.rows.flatMap((r) => r.tiles.map((t) => [t.id, t.title] as const)));
+      syncFront();
+    } else if (msg.type === "state") {
+      frontId = msg.foreground === "app" && msg.tileId ? msg.tileId : null;
+      syncFront();
+    } else if (msg.type === "error") {
+      if (msg.code === "unauthorized") markUnpaired();
+      else if (msg.code === "launch_failed") showToast(msg.message);
     }
   };
   ws.onclose = (ev) => {
-    if (socket === ws) socket = null;
+    if (socket === ws) {
+      socket = null;
+      frontId = null;
+      syncFront();
+    }
     if (ev.code === UNAUTHORIZED) return markUnpaired();
     scheduleReconnect();
   };

@@ -13,10 +13,11 @@ export const TILES_FILE = process.env.TVDECK_CONFIG ? path.resolve(process.env.T
 export const TILES_EXAMPLE = path.join(REPO_ROOT, "config", "tiles.example.json");
 export const ICONS_DIR = path.join(CONFIG_DIR, "icons");
 
-/** %LOCALAPPDATA%\TVDeck (falls back to ~/.tvdeck on other platforms). Created on first use. */
+/** TVDECK_DATA_DIR, else %LOCALAPPDATA%\TVDeck (falls back to ~/.local/share/TVDeck). Created on first use. */
 export function dataDir(): string {
+  const override = process.env.TVDECK_DATA_DIR;
   const base = process.env.LOCALAPPDATA ?? path.join(os.homedir(), ".local", "share");
-  const dir = path.join(base, "TVDeck");
+  const dir = override ? path.resolve(override) : path.join(base, "TVDeck");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }

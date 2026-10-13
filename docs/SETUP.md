@@ -1,4 +1,4 @@
-# TVDeck setup (Milestone 2)
+# TVDeck setup (Milestone 3)
 
 Requirements: Windows 11 (x64), Node 22+, npm 10+, Microsoft Edge. The PC and phone must be on the same network.
 
@@ -19,7 +19,7 @@ On start the server opens the launcher: Microsoft Edge in app mode, fullscreen, 
 - Move with the arrow keys (or the phone D-pad), OK/Enter to open, Esc to jump back to the first tile. Mouse hover and click work too.
 - Phone Home raises the launcher. If its window was closed, the server finds it again or relaunches it.
 - Tiles come from `config/tiles.json`, hot-reloaded. See [CONFIG.md](CONFIG.md).
-- Opening apps arrives in Milestone 3; for now OK shows a message.
+- OK on a tile opens the app (see [Apps](#apps)). The tile shows "Opening" until the app is in front, and a small dot marks apps that are still running behind the launcher.
 
 The console prints a banner like:
 
@@ -32,6 +32,18 @@ Open that URL on your phone. The token lives in the URL fragment, so it is never
 **Windows Firewall:** the first time, Windows may ask whether Node.js can accept connections. Allow it on Private networks. If the phone cannot connect, check that your Wi-Fi network is set to Private.
 
 If the phone shows "Not paired", open the URL from the console again.
+
+## Apps
+
+- **Web tiles** open in their own fullscreen Edge window, using a separate persistent profile in `%LOCALAPPDATA%\TVDeck\edge-apps`. **Sign in once per service** (Netflix, YouTube, ...) the first time; the logins are kept in that profile.
+- Opening a tile again brings its existing window to the front instead of starting another one. **Home** raises the launcher and leaves every app running.
+- The phone's **Back** sends Esc, or Alt+Left for tiles with `"backKey": "browserBack"` (see [CONFIG.md](CONFIG.md)). The phone's status pill shows which app is in front, for example "Connected · YouTube".
+- If an app can't be opened (missing file or folder, no window within 10 s, 15 s for `steam://` style links), the launcher and the phone show a short message.
+- `TVDECK_DATA_DIR` moves the data folder (secrets, paired devices, Edge profiles) away from `%LOCALAPPDATA%\TVDeck`. Handy for testing without touching your real setup; use it together with `TVDECK_CONFIG` and `TVDECK_PORT`.
+
+### Netflix quality
+
+Edge plays Netflix with PlayReady, which is what allows 1080p and 4K (Chrome and most embedded browsers are limited to 720p). For 4K you also need an HDCP 2.2 display chain and the **HEVC Video Extensions** from the Microsoft Store. To check what you actually get, play something and press `Ctrl+Alt+Shift+D` in the player: the overlay shows the playing resolution and codec.
 
 ## Production build
 

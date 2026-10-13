@@ -64,6 +64,8 @@ export const setLauncherWindow = (h: number | null): void => {
   launcherHwnd = h;
 };
 
+export const getLauncherWindow = (): number | null => launcherHwnd;
+
 type Resolver = (step: (m: string) => void) => Promise<number | null>;
 let resolver: Resolver | null = null;
 /** Registered by apps/launcher.ts: re-finds the launcher window, or relaunches it. */

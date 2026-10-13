@@ -2,6 +2,7 @@ import type { Server as HttpServer } from "node:http";
 import type { Duplex } from "node:stream";
 import { CloseCode, LAUNCHER_ONLY, parseClientMsg, type ServerMsg } from "@tvdeck/protocol";
 import { WebSocket, WebSocketServer } from "ws";
+import type { AppService, StateMsg } from "./apps/service.ts";
 import { dispatch } from "./dispatch.ts";
 import type { TilesState } from "./config/watch.ts";
 import { log } from "./log.ts";
@@ -17,6 +18,8 @@ export interface WsHandle {
   close(): void;
   /** Sends the tiles config to every authenticated socket (launcher and remotes). */
   broadcastTiles(state: TilesState): void;
+  /** Sends the foreground/running state to every authenticated socket. */
+  broadcastState(state: StateMsg): void;
 }
 
 export function attachWebSocket(
@@ -24,6 +27,7 @@ export function attachWebSocket(
   ctx: AuthContext,
   serverVersion: string,
   getTiles: () => TilesState,
+  apps?: AppService,
 ): WsHandle {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD });
 
@@ -77,6 +81,7 @@ export function attachWebSocket(
         authed.add(ws);
         send(ws, { type: "welcome", serverVersion });
         send(ws, tilesMsg(getTiles()));
+        if (apps) send(ws, apps.state());
         return;
       }
 
@@ -87,7 +92,7 @@ export function attachWebSocket(
         return void send(ws, { type: "error", code: "forbidden", message: `${msg.type} is launcher-only` });
       }
       try {
-        dispatch(msg, (m) => send(ws, m));
+        dispatch(msg, (m) => send(ws, m), apps);
       } catch (e) {
         log.error("ws", `dispatch ${msg.type} failed: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -114,6 +119,10 @@ export function attachWebSocket(
   return {
     broadcastTiles(state) {
       const m = JSON.stringify(tilesMsg(state));
+      for (const c of wss.clients) if (authed.has(c) && c.readyState === WebSocket.OPEN) c.send(m);
+    },
+    broadcastState(state) {
+      const m = JSON.stringify(state);
       for (const c of wss.clients) if (authed.has(c) && c.readyState === WebSocket.OPEN) c.send(m);
     },
     close() {
