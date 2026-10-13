@@ -1,5 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
-import { devices, focusId, overlay, PHONES_ID, status } from "../store.ts";
+import { config, devices, focusId, overlay, PHONES_ID, status } from "../store.ts";
+import { dayLabel, weather } from "../weather.ts";
+import { WeatherIcon } from "./WeatherIcon.tsx";
 
 function useNow(): Date {
   const [now, setNow] = useState(() => new Date());
@@ -23,7 +25,7 @@ const LINK_TEXT = {
   unauthorized: "Not authorised",
 } as const;
 
-/** Quiet corner chrome: connection, settings and the time, top right. */
+/** Welcome line on the left; connection, settings, weather, day and time on the right. */
 export function TopBar() {
   const now = useNow();
   const time = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(now);
@@ -31,9 +33,12 @@ export function TopBar() {
   const s = status.value;
   const focused = focusId.value === PHONES_ID;
   const count = devices.value?.length;
+  const welcome = config.value?.home?.welcome;
+  const wx = weather.value;
 
   return (
     <header class="topbar" data-awake={focused ? "" : undefined}>
+      {welcome ? <h1 class="welcome">{welcome}</h1> : <span />}
       <div class="corner">
         <span class="link" data-status={s} role="status" aria-live="polite">
           <i class="link-dot" />
@@ -57,6 +62,13 @@ export function TopBar() {
           </span>
           <span class="gear-label">Phones{count ? ` · ${count}` : ""}</span>
         </button>
+        {wx ? (
+          <span class="weather" aria-label={`${wx.temp} degrees`}>
+            <WeatherIcon sky={wx.sky} />
+            <span class="weather-temp">{wx.temp}°</span>
+          </span>
+        ) : null}
+        <span class="day">{dayLabel(now)}</span>
         <div class="clock" title={date}>
           <span class="clock-time">{time}</span>
         </div>

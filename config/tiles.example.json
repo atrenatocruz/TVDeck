@@ -39,5 +39,9 @@
         { "id": "videos", "title": "Videos", "type": "folder", "path": "%USERPROFILE%\\Videos", "accent": "#2fc9a0" }
       ]
     }
-  ]
+  ],
+  "home": {
+    "welcome": "Welcome back",
+    "weather": { "latitude": 38.72, "longitude": -9.14, "unit": "celsius" }
+  }
 }

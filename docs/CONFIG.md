@@ -92,3 +92,22 @@ An optional top-level `remote` block (next to `rows`) changes what the paired Xi
 ```
 
 An action is `"home"` (bring the launcher), `"back"` (the per-tile Back), `"none"`, or `{ "open": "<tile id>" }`. A button that opens a tile id that does not exist logs a warning and does nothing. `hid` only needs setting for a different remote model (decimal numbers; the defaults are 0x2717 / 0x32b9). See [SETUP.md](SETUP.md#xiaomi-bluetooth-remote) for pairing and the other buttons.
+
+## Home screen extras
+
+An optional top-level `home` block:
+
+```json
+"home": {
+  "welcome": "Welcome back, Ana & Rui",
+  "weather": { "latitude": 38.72, "longitude": -9.14, "unit": "celsius" }
+}
+```
+
+| Field | What it does |
+| --- | --- |
+| `welcome` | Text shown top-left on the launcher (up to 80 characters). Leave it out for no message. |
+| `weather.latitude` / `weather.longitude` | Where to show the weather for. The launcher asks [Open-Meteo](https://open-meteo.com) (free, no account) every 15 minutes and shows an icon (sun, moon, partly cloudy, clouds, fog, rain, snow, storm) and the temperature next to the day and time. |
+| `weather.unit` | `celsius` (default) or `fahrenheit`. |
+
+The day next to the time is always shown, as "Tuesday, 13th".

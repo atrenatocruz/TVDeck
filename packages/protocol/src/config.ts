@@ -59,8 +59,20 @@ export const RemoteConfig = z
   })
   .strict();
 
+/** Home screen extras: a welcome line and the weather for a place (Open-Meteo, no account needed). */
+export const HomeConfig = z.object({
+  welcome: z.string().max(80).optional(),
+  weather: z
+    .object({
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
+      unit: z.enum(["celsius", "fahrenheit"]).optional(),
+    })
+    .optional(),
+});
+
 export const TilesConfig = z
-  .object({ rows: z.array(Row), remote: RemoteConfig.optional() })
+  .object({ rows: z.array(Row), remote: RemoteConfig.optional(), home: HomeConfig.optional() })
   .superRefine((cfg, ctx) => {
     const seen = new Set<string>();
     for (const row of cfg.rows)
@@ -75,3 +87,4 @@ export type Row = z.infer<typeof Row>;
 export type TilesConfig = z.infer<typeof TilesConfig>;
 export type RemoteAction = z.infer<typeof RemoteAction>;
 export type RemoteConfig = z.infer<typeof RemoteConfig>;
+export type HomeConfig = z.infer<typeof HomeConfig>;

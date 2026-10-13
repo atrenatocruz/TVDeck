@@ -215,7 +215,7 @@ code {
   left: 0;
   right: 0;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   padding: calc(40 * var(--u)) calc(64 * var(--u)) 0;
   pointer-events: none;
@@ -333,6 +333,66 @@ code {
   letter-spacing: 0.01em;
   color: var(--text-2);
 }
+/* ---------- welcome, weather, day ---------- */
+.welcome {
+  margin: 0;
+  font-size: calc(40 * var(--u));
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+  text-shadow: 0 calc(2 * var(--u)) calc(18 * var(--u)) rgb(0 0 0 / 0.35);
+}
+.weather {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  color: var(--text-2);
+}
+.wx {
+  width: calc(34 * var(--u));
+  height: calc(34 * var(--u));
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.wx-sun circle {
+  fill: #ffd27a;
+  stroke: #ffd27a;
+}
+.wx-sun path {
+  stroke: #ffd27a;
+}
+.wx-moon {
+  fill: #e8e6ff;
+  stroke: #e8e6ff;
+}
+.wx-cloud {
+  fill: rgb(255 255 255 / 0.9);
+  stroke: none;
+}
+.wx-line {
+  stroke: #9fc8ff;
+  stroke-width: 2;
+}
+.wx-bolt {
+  stroke: #ffd27a;
+  stroke-width: 2;
+}
+.weather-temp {
+  font-size: calc(32 * var(--u));
+  font-weight: 560;
+  font-variant-numeric: tabular-nums;
+}
+.day {
+  font-size: calc(32 * var(--u));
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
 /* ---------- dock (rows) ---------- */
 .viewport {
   position: absolute;
