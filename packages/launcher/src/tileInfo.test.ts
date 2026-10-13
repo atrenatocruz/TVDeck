@@ -1,15 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accentOf, greeting, luminance, tileSub, wordmarkSize } from "./tileInfo.ts";
-
-describe("tileSub", () => {
-  it("describes each tile kind", () => {
-    expect(tileSub({ type: "web", url: "https://www.netflix.com/browse" })).toBe("netflix.com");
-    expect(tileSub({ type: "web", url: "https://play.hbomax.com" })).toBe("hbomax.com");
-    expect(tileSub({ type: "uri", url: "steam://open/bigpicture" })).toBe("Steam");
-    expect(tileSub({ type: "exe", path: "C:\\x.exe" })).toBe("App");
-    expect(tileSub({ type: "folder", path: "C:\\" })).toBe("Folder");
-  });
-});
+import { accentOf, greeting, luminance, wordmarkSize } from "./tileInfo.ts";
 
 describe("accentOf", () => {
   it("keeps valid colours, derives a stable one otherwise", () => {

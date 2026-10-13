@@ -1,5 +1,5 @@
 import type { Tile as TileData } from "@tvdeck/protocol";
-import { accentOf, luminance, tileSub, wordmarkSize } from "../tileInfo.ts";
+import { accentOf, luminance, wordmarkSize } from "../tileInfo.ts";
 
 interface Props {
   tile: TileData;
@@ -57,7 +57,7 @@ export function Tile({ tile, row, index, focused, rowActive, running, opening, i
       </button>
       <div class="caption" aria-hidden="true">
         {hasIcon ? <span class="cap-title">{tile.title}</span> : null}
-        <span class="cap-sub">{opening ? "Opening" : running ? "Running" : tileSub(tile)}</span>
+        {opening || running ? <span class="cap-sub">{opening ? "Opening" : "Running"}</span> : null}
       </div>
     </div>
   );

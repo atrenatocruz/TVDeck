@@ -1,25 +1,5 @@
 import type { Tile } from "@tvdeck/protocol";
 
-/** Short secondary line under a tile. */
-export function tileSub(t: Pick<Tile, "type" | "url" | "path">): string {
-  switch (t.type) {
-    case "web":
-      try {
-        return new URL(t.url ?? "").hostname.replace(/^(www|play|web)\./, "");
-      } catch {
-        return "Website";
-      }
-    case "uri": {
-      const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(t.url ?? "")?.[1];
-      return scheme ? scheme[0]!.toUpperCase() + scheme.slice(1).toLowerCase() : "App";
-    }
-    case "exe":
-      return "App";
-    case "folder":
-      return "Folder";
-  }
-}
-
 const COLOR_RE = /^(#[0-9a-f]{3,8}|(rgb|hsl|oklch|oklab|lab|lch|hwb)a?\([^)]+\))$/i;
 const FALLBACK_INK = "#7f8cff";
 
