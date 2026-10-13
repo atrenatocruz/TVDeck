@@ -4,7 +4,7 @@ import path from "node:path";
 import type { Tile } from "@tvdeck/protocol";
 import { expandEnv } from "../config/load.ts";
 import { dataDir, findEdge } from "../paths.ts";
-import { buildWebArgs } from "./edge.ts";
+import { buildWebArgs, resolveUserAgent, webProfileDir } from "./edge.ts";
 
 export interface Target {
   command: string;
@@ -32,7 +32,7 @@ export function resolveTarget(
   switch (tile.type) {
     case "web": {
       if (!o.edge) throw new Error("Microsoft Edge was not found on this PC");
-      return { command: o.edge, args: buildWebArgs({ dataDir: o.dataDir, url: tile.url! }) };
+      return { command: o.edge, args: buildWebArgs({ dataDir: o.dataDir, url: tile.url!, userAgent: resolveUserAgent(tile.userAgent) }) };
     }
     case "exe": {
       const p = expandEnv(tile.path!);
@@ -75,6 +75,6 @@ export function targetFor(tile: Tile): Target {
 
 /** Launches a resolved target. The tracker finds the resulting window. */
 export async function launchTarget(tile: Tile, target: Target): Promise<void> {
-  if (tile.type === "web") fs.mkdirSync(path.join(dataDir(), "edge-apps"), { recursive: true });
+  if (tile.type === "web") fs.mkdirSync(webProfileDir(dataDir(), resolveUserAgent(tile.userAgent)), { recursive: true });
   await spawnDetached(target.command, target.args, tile.title);
 }

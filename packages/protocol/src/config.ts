@@ -14,6 +14,8 @@ export const Tile = z
     icon: z.string().optional(),
     accent: z.string().optional(),
     backKey: BackKey.optional(),
+    /** Browser identity for web tiles: "tv" (a smart-TV browser, for TV interfaces such as youtube.com/tv) or a full user-agent string. */
+    userAgent: z.string().min(1).max(400).optional(),
     match: z
       .object({ titleRegex: z.string().optional(), process: z.string().optional() })
       .optional(),

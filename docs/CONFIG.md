@@ -41,6 +41,7 @@ Rows appear top to bottom, tiles left to right. Empty rows are skipped.
 | `icon` | no | A file name inside `config/icons/` (png, jpg, webp, svg). Shown instead of the wordmark. |
 | `accent` | no | A CSS colour such as `#e5384a`, `rgb(...)` or `hsl(...)`. Tints the tile gradient and the screen glow when the tile is focused. Without it, a colour is derived from the `id`. |
 | `backKey` | no | `esc` (default) or `browserBack` (Alt+Left). Which key the remote's Back button sends while this app is in front. Use `browserBack` for websites where Esc does the wrong thing (it leaves fullscreen video, for example). |
+| `userAgent` | no | Web tiles only. `tv` makes Edge identify as a smart-TV browser, so sites with a TV interface serve it (YouTube: use `https://www.youtube.com/tv` with `backKey: "esc"`). Any other value is used as the full user-agent string. Each user agent gets its own Edge profile, so you sign in to it separately. |
 | `match` | no | How to recognise the app's window: `{ "process": "steamwebhelper.exe", "titleRegex": "Big Picture" }`. Both parts are optional, case-insensitive, and must both hold when both are given. See "How windows are tracked". |
 
 ### Tile types
@@ -69,3 +70,7 @@ TVDeck ships no logos. To use your own, put an image in `config/icons/` and refe
 ```
 
 Wide or square images with a transparent background look best. They are shown at about 60 percent of the tile, centred, and the file name's folder is served at `/icons/`.
+
+## TV interfaces
+
+`"userAgent": "tv"` only helps on sites that still serve a TV interface to browsers. As of October 2026 that is YouTube (`https://www.youtube.com/tv`): sign in on the TV screen with the code it shows, at youtube.com/activate on your phone. Netflix, Disney+, Prime Video, HBO Max and Stremio only ship their TV interfaces inside native smart-TV apps, so their tiles open the regular website.

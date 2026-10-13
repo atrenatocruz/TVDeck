@@ -4,7 +4,7 @@
       "title": "Watch",
       "tiles": [
         { "id": "netflix", "title": "Netflix", "type": "web", "url": "https://www.netflix.com/browse", "accent": "#e5384a", "backKey": "browserBack" },
-        { "id": "youtube", "title": "YouTube", "type": "web", "url": "https://www.youtube.com", "accent": "#ff5a4d", "backKey": "browserBack" },
+        { "id": "youtube", "title": "YouTube", "type": "web", "url": "https://www.youtube.com/tv", "userAgent": "tv", "accent": "#ff5a4d", "backKey": "esc" },
         { "id": "disney", "title": "Disney+", "type": "web", "url": "https://www.disneyplus.com", "accent": "#3b6bff", "backKey": "browserBack" },
         { "id": "prime", "title": "Prime Video", "type": "web", "url": "https://www.primevideo.com", "accent": "#18a8e8", "backKey": "browserBack" },
         { "id": "hbo", "title": "HBO Max", "type": "web", "url": "https://play.hbomax.com", "accent": "#8b4dff", "backKey": "browserBack" },

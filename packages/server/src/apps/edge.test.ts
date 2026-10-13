@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLauncherArgs, buildWebArgs, launcherUrl } from "./edge.ts";
+import { buildLauncherArgs, buildWebArgs, launcherUrl, resolveUserAgent, TV_USER_AGENT } from "./edge.ts";
 
 describe("buildLauncherArgs", () => {
   const args = buildLauncherArgs({ dataDir: "C:\\Data\\TVDeck", port: 7420, key: "ab-_c" });
@@ -24,5 +24,20 @@ describe("buildWebArgs", () => {
     expect(args).toContain("--no-first-run");
     expect(args).toContain("--no-default-browser-check");
     expect(args).toContain("--autoplay-policy=no-user-gesture-required");
+  });
+});
+
+describe("buildWebArgs with a user agent", () => {
+  it("gives the TV user agent its own profile and passes it to Edge", () => {
+    const args = buildWebArgs({ dataDir: "C:\\Data\\TVDeck", url: "https://www.youtube.com/tv", userAgent: resolveUserAgent("tv") });
+    expect(args).toContain("--user-data-dir=C:\\Data\\TVDeck\\edge-apps-tv");
+    expect(args).toContain(`--user-agent=${TV_USER_AGENT}`);
+  });
+
+  it("hashes custom user agents into a stable profile name", () => {
+    const a = buildWebArgs({ dataDir: "C:\\D", url: "https://x", userAgent: "Custom/1.0" });
+    expect(a[0]).toMatch(/^--user-data-dir=C:\\D\\edge-apps-[0-9a-f]{8}$/);
+    expect(buildWebArgs({ dataDir: "C:\\D", url: "https://x", userAgent: "Custom/1.0" })[0]).toBe(a[0]);
+    expect(resolveUserAgent(undefined)).toBeUndefined();
   });
 });
