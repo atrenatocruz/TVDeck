@@ -43,12 +43,14 @@ export const ClientMsg = z.discriminatedUnion("type", [
   // launcher-only
   z.object({ type: z.literal("pairingStart") }),
   z.object({ type: z.literal("pairingCancel") }),
+  /** Settings > Hide TVDeck: close the launcher until Home/Power/TVDeck.exe brings it back. */
+  z.object({ type: z.literal("hideLauncher") }),
   z.object({ type: z.literal("deviceRevoke"), deviceId: z.string().max(100) }),
   z.object({ type: z.literal("ping"), t: z.number() }),
 ]);
 
 /** Messages only the launcher may send. */
-export const LAUNCHER_ONLY = new Set<ClientMsg["type"]>(["pairingStart", "pairingCancel", "deviceRevoke"]);
+export const LAUNCHER_ONLY = new Set<ClientMsg["type"]>(["pairingStart", "pairingCancel", "deviceRevoke", "hideLauncher"]);
 
 // ---- server → client ----
 

@@ -1,4 +1,5 @@
 import type { Server as HttpServer } from "node:http";
+import { closeLauncher } from "./apps/launcher.ts";
 import type { Duplex } from "node:stream";
 import { CloseCode, LAUNCHER_ONLY, parseClientMsg, type ServerMsg } from "@tvdeck/protocol";
 import { WebSocket, WebSocketServer } from "ws";
@@ -165,6 +166,11 @@ export function attachWebSocket(
       }
       if (role === "launcher" && msg.type === "pairingCancel") {
         if (ctx.pairing.cancel()) log.info("ws", "pairing code cancelled");
+        return;
+      }
+      if (role === "launcher" && msg.type === "hideLauncher") {
+        log.info("launcher", "hidden from Settings; Home, Power or TVDeck.exe brings it back");
+        closeLauncher();
         return;
       }
       if (role === "launcher" && msg.type === "deviceRevoke") {

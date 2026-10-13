@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import { config, devices, focusId, overlay, PHONES_ID, status } from "../store.ts";
+import { config, focusId, overlay, PHONES_ID, status } from "../store.ts";
 import { dayLabel, weather } from "../weather.ts";
 import { WeatherIcon } from "./WeatherIcon.tsx";
 
@@ -32,7 +32,6 @@ export function TopBar() {
   const date = new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long" }).format(now);
   const s = status.value;
   const focused = focusId.value === PHONES_ID;
-  const count = devices.value?.length;
   const welcome = config.value?.home?.welcome;
   const wx = weather.value;
 
@@ -48,7 +47,7 @@ export function TopBar() {
           class="gear"
           type="button"
           tabIndex={-1}
-          aria-label="Phones"
+          aria-label="Settings"
           data-focused={focused ? "" : undefined}
           onPointerMove={(e) => (e.movementX || e.movementY) && focusId.value !== PHONES_ID && (focusId.value = PHONES_ID)}
           onClick={() => (overlay.value = { kind: "devices" })}
@@ -60,7 +59,7 @@ export function TopBar() {
               <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="2" />
             </svg>
           </span>
-          <span class="gear-label">Phones{count ? ` · ${count}` : ""}</span>
+          <span class="gear-label">Settings</span>
         </button>
         {wx ? (
           <span class="weather" aria-label={`${wx.temp} degrees`}>

@@ -297,3 +297,38 @@
     animation: none;
   }
 }
+
+/* ---------- settings: Hide TVDeck + Phones section ---------- */
+.btn.hide-btn {
+  height: auto;
+  display: grid;
+  gap: calc(6 * var(--u));
+  padding: calc(22 * var(--u)) calc(34 * var(--u));
+  border-radius: calc(28 * var(--u));
+  text-align: left;
+}
+.hide-title {
+  font-size: calc(28 * var(--u));
+  font-weight: 620;
+}
+.hide-sub {
+  font-size: calc(21 * var(--u));
+  font-weight: 460;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+.btn.hide-btn:focus .hide-sub {
+  color: inherit;
+  opacity: 0.7;
+}
+.ov-section {
+  margin: calc(18 * var(--u)) 0 0;
+  font-size: calc(24 * var(--u));
+  font-weight: 620;
+  color: var(--text-1);
+}
+.ov-section span {
+  margin-left: calc(10 * var(--u));
+  font-weight: 460;
+  color: var(--text-3);
+}

@@ -104,6 +104,10 @@ Everything the server prints is also written to `%LOCALAPPDATA%\TVDeck\logs\tvde
 
 `npm run spike:input`, `spike:home` and `spike:m4` are manual checks that open and close their own windows (a throwaway Edge page that records key and mouse events, a stand-in launcher for Home against Notepad, fullscreen Edge and Steam Big Picture). Each prints PASS, FAIL or SKIP per step and never injects input unless its target window is in front. Do not touch the keyboard or mouse while one runs. `TVDECK_DRY_INPUT=1` prints every input as `[dry-input] ...` instead of sending it.
 
+## Hiding TVDeck while you use the PC
+
+Settings (press Up from the apps to reach the gear) > **Hide TVDeck** closes the launcher and keeps it closed: it won't reopen by itself. Home or Power on the Xiaomi remote, Home on the phone, or the TVDeck app brings it back. The server keeps running in the background, so the remotes keep working.
+
 ## TVDeck app (Start menu / Desktop)
 
 ```

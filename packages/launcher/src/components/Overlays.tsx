@@ -168,19 +168,30 @@ function PairOverlay() {
   );
 }
 
-/* --------------------------------------------------------------- devices */
+/* --------------------------------------------------------------- settings */
+
+function hideTvDeck() {
+  closeOverlay();
+  send({ type: "hideLauncher" });
+}
 
 function DevicesOverlay() {
   const list = devices.value ?? [];
   const now = useTick(15_000);
   useOverlayKeys(closeOverlay, overlay.value?.kind === "devices");
   return (
-    <Frame label="Phones">
+    <Frame label="Settings">
       <header class="ov-head">
-        <h2 class="ov-title">Phones</h2>
-        <p class="ov-sub">{list.length === 0 ? "No phone is paired yet." : `${list.length} paired. Select one to remove it.`}</p>
+        <h2 class="ov-title">Settings</h2>
       </header>
       <div class="dev-list">
+        <button class="btn hide-btn" type="button" data-f onClick={hideTvDeck}>
+          <span class="hide-title">Hide TVDeck</span>
+          <span class="hide-sub">Closes it while you use the PC. Home or Power on the remote, or the TVDeck app, brings it back.</span>
+        </button>
+        <h3 class="ov-section">
+          Phones <span>{list.length === 0 ? "None paired yet" : `${list.length} paired · select one to remove it`}</span>
+        </h3>
         <button class="btn btn-primary dev-add" type="button" data-f onClick={() => (overlay.value = { kind: "pair" })}>
           Pair a new phone
         </button>
