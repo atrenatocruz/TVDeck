@@ -102,4 +102,21 @@ export const IconKeyboard = () => (
   </svg>
 );
 
+export const IconTv = () => (
+  <svg {...base}>
+    <rect x="3.5" y="5" width="17" height="11.5" rx="2.6" />
+    <path d="M9 19.5h6" />
+  </svg>
+);
+export const IconPlus = () => (
+  <svg {...base}>
+    <path d="M12 6.5v11M6.5 12h11" />
+  </svg>
+);
+export const IconMinus = () => (
+  <svg {...base}>
+    <path d="M6.5 12h11" />
+  </svg>
+);
+
 export type IconComponent = () => JSX.Element;

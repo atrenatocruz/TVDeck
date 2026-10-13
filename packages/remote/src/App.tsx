@@ -1,7 +1,7 @@
 import { Offline } from "./components/Offline.tsx";
 import { Unpaired } from "./components/Unpaired.tsx";
 import { tick } from "./haptics.ts";
-import { IconApps, IconRemote, IconTouchpad } from "./icons.tsx";
+import { IconApps, IconKeyboard, IconRemote, IconTouchpad } from "./icons.tsx";
 import { setTab, TABS, tab, type Tab } from "./nav.ts";
 import { AppsView } from "./views/Apps.tsx";
 import { RemoteView } from "./views/Remote.tsx";
@@ -16,21 +16,43 @@ const STATUS_TEXT = {
   unpaired: "Not paired",
 } as const;
 
-function StatusPill() {
+/** Opens the text field (Touchpad view) with the keyboard up. Phones only raise the keyboard for a focus
+ * that happens inside the tap, and the Touchpad panel is still hidden then, so a hidden field in the header
+ * takes the focus first and hands it to the real field once the panel is showing. */
+function openKeyboard() {
+  document.querySelector<HTMLInputElement>(".kbd-proxy")?.focus({ preventScroll: true });
+  setTab("touchpad");
+  setTimeout(() => document.querySelector<HTMLTextAreaElement>('section.panel[data-pos="active"] .field-input')?.focus({ preventScroll: true }), 60);
+}
+
+/** Centered PC name with what is in front (or the connection state) under it; keyboard on the right. */
+function Header() {
   const s = status.value;
-  const name = pcName.value;
+  const name = pcName.value ?? "TVDeck";
   const front = frontApp.value;
+  const sub = s === "connected" ? (front ?? "Connected") : STATUS_TEXT[s];
   return (
-    <header class="top">
-      <div class="pill" data-status={s} role="status" aria-live="polite">
-        <span class="dot" />
-        <span class="pill-text">
-          {STATUS_TEXT[s]}
-          {s === "connected" && front ? <span class="pill-sub"> · {front}</span> : null}
-          {s === "connected" && !front && name ? <span class="pill-sub"> to {name}</span> : null}
-          {s === "reconnecting" || s === "connecting" ? <span class="pill-sub">...</span> : null}
+    <header class="hdr">
+      <span class="hdr-side" aria-hidden="true" />
+      <div class="hdr-title" role="status" aria-live="polite">
+        <span class="hdr-name">{name}</span>
+        <span class="hdr-sub" data-status={s}>
+          <i class="hdr-dot" />
+          {sub}
         </span>
       </div>
+      <button
+        type="button"
+        class="hdr-btn"
+        aria-label="Keyboard"
+        onClick={() => {
+          tick(6);
+          openKeyboard();
+        }}
+      >
+        <IconKeyboard />
+      </button>
+      <input class="kbd-proxy" type="text" tabIndex={-1} aria-hidden="true" autoComplete="off" />
     </header>
   );
 }
@@ -117,7 +139,7 @@ export function App() {
   return (
     <div class="shell">
       <div class="aura" aria-hidden="true" />
-      <StatusPill />
+      <Header />
       <Panels />
       <Toast />
       <TabBar />

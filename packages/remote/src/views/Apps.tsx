@@ -1,6 +1,9 @@
 import type { Tile } from "@tvdeck/protocol";
 import { tick } from "../haptics.ts";
 import { frontTileId, running, send, status, tiles } from "../ws.ts";
+// Same icon surfaces as the TV launcher's dock, so an app looks the same on both screens.
+import { logoTone } from "../../../launcher/src/logoTone.ts";
+import { surfaceFor, wordmarkSurface } from "../../../launcher/src/tileInfo.ts";
 
 const COLOR_RE = /^(#[0-9a-f]{3,8}|(rgb|hsl|oklch|oklab|lab|lch|hwb)a?\([^)]+\))$/i;
 
@@ -21,22 +24,30 @@ function Card({ tile }: { tile: Tile }) {
   const isFront = frontTileId.value === tile.id;
   const isRunning = running.value.has(tile.id);
   const state = isFront ? "front" : isRunning ? "running" : "idle";
+  const accent = accentOf(tile);
+  const surface = tile.icon ? surfaceFor(accent, logoTone(tile.icon)) : wordmarkSurface(accent);
   return (
     <button
       type="button"
       class="app"
       data-state={state}
-      style={{ "--tile": accentOf(tile) }}
+      style={{ "--tile": accent, "--surface-base": surface.base, "--surface-top": surface.top }}
       aria-label={`${tile.title}${isFront ? ", in front" : isRunning ? ", running" : ""}`}
       onClick={() => {
         if (send({ type: "openApp", tileId: tile.id })) tick(12);
       }}
     >
-      <span class="app-glyph" aria-hidden="true">
-        {tile.title.trim().charAt(0).toUpperCase()}
+      <span class="app-icon" aria-hidden="true">
+        {tile.icon ? (
+          <img src={`/icons/${encodeURIComponent(tile.icon)}`} alt="" draggable={false} />
+        ) : (
+          <span class="app-wordmark">{tile.title}</span>
+        )}
       </span>
-      <span class="app-title">{tile.title}</span>
-      <span class="app-state">{isFront ? "In front" : isRunning ? "Running" : " "}</span>
+      <span class="app-meta">
+        <span class="app-title">{tile.title}</span>
+        <i class="app-dot" />
+      </span>
     </button>
   );
 }

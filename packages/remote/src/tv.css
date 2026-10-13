@@ -1,0 +1,546 @@
+/* =====================================================================
+   tvOS-style remote: neutral true-black palette shared with the launcher, a swipe surface (clickpad),
+   a click-ring D-pad, round material keys and a volume rocker. Loaded last; overrides earlier sheets.
+   ===================================================================== */
+
+:root {
+  --ink: #060608;
+  --surface-1: #121216;
+  --surface-2: #1a1a1f;
+  --surface-3: #24242b;
+  --surface-4: #2f2f37;
+  --hairline: rgb(255 255 255 / 0.08);
+  --hairline-strong: rgb(255 255 255 / 0.16);
+  --text-1: #f5f5f7;
+  --text-2: rgb(255 255 255 / 0.62);
+  --text-3: rgb(255 255 255 / 0.38);
+  --accent: #f5f5f7;
+  --accent-strong: #ffffff;
+  --accent-ink: #0b0b0e;
+  --accent-glow: rgb(255 255 255 / 0.28);
+  --spring: linear(0, 0.2 6%, 0.58 13%, 0.9 22%, 1.04 31%, 1.055 38%, 1.03 47%, 1.008 58%, 0.998 70%, 1);
+  --pad-r: 34px;
+}
+
+.aura {
+  background:
+    radial-gradient(90% 50% at 50% 0%, rgb(255 255 255 / 0.05), transparent 70%),
+    radial-gradient(70% 40% at 50% 100%, rgb(120 130 160 / 0.07), transparent 70%);
+}
+
+/* ---------- header ---------- */
+.hdr {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 14px 18px 6px;
+}
+.hdr-title {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.hdr-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.hdr-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 520;
+  color: var(--text-2);
+}
+.hdr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  opacity: 0.8;
+}
+.hdr-sub[data-status="connecting"] .hdr-dot,
+.hdr-sub[data-status="reconnecting"] .hdr-dot {
+  background: var(--warn);
+  animation: hdr-breathe 1.6s ease-in-out infinite;
+}
+.hdr-sub[data-status="offline"] .hdr-dot,
+.hdr-sub[data-status="unpaired"] .hdr-dot {
+  background: var(--bad);
+}
+@keyframes hdr-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+.hdr-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--text-2);
+  background: rgb(255 255 255 / 0.06);
+  transition:
+    transform var(--dur-release) var(--spring),
+    background var(--dur-ui) var(--ease-out);
+}
+.hdr-btn:active {
+  transform: scale(0.9);
+  background: rgb(255 255 255 / 0.14);
+  transition-duration: var(--dur-press), 60ms;
+}
+.hdr-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- remote layout ---------- */
+.remote {
+  justify-content: stretch;
+  gap: 18px;
+  padding: 8px 18px 14px;
+}
+.surface {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+}
+
+/* ---------- swipe surface ---------- */
+.clickpad {
+  --x: 50%;
+  --y: 50%;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--pad-r);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgb(255 255 255 / 0.05), transparent 60%),
+    linear-gradient(180deg, #17171c, #0f0f13);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 24px 60px rgb(0 0 0 / 0.55);
+  touch-action: none;
+  cursor: grab;
+  transition: opacity 300ms var(--ease-out);
+}
+.clickpad[data-disabled] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.cp-light {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.04) 60%, transparent);
+  opacity: 0;
+  transform: scale(0.7);
+  transition:
+    opacity 260ms var(--ease-out),
+    transform 420ms var(--spring);
+  pointer-events: none;
+}
+.clickpad[data-touch] .cp-light {
+  opacity: 1;
+  transform: scale(1);
+}
+.cp-ripple {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+.clickpad[data-tap] .cp-ripple {
+  animation: cp-ripple 520ms var(--ease-out);
+}
+@keyframes cp-ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+.cp-edge {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out);
+}
+.cp-edge[data-edge="up"],
+.cp-edge[data-edge="down"] {
+  left: 10%;
+  right: 10%;
+  height: 90px;
+}
+.cp-edge[data-edge="left"],
+.cp-edge[data-edge="right"] {
+  top: 10%;
+  bottom: 10%;
+  width: 90px;
+}
+.cp-edge[data-edge="up"] {
+  top: 0;
+  background: radial-gradient(60% 100% at 50% 0%, rgb(255 255 255 / 0.22), transparent);
+}
+.cp-edge[data-edge="down"] {
+  bottom: 0;
+  background: radial-gradient(60% 100% at 50% 100%, rgb(255 255 255 / 0.22), transparent);
+}
+.cp-edge[data-edge="left"] {
+  left: 0;
+  background: radial-gradient(100% 60% at 0% 50%, rgb(255 255 255 / 0.22), transparent);
+}
+.cp-edge[data-edge="right"] {
+  right: 0;
+  background: radial-gradient(100% 60% at 100% 50%, rgb(255 255 255 / 0.22), transparent);
+}
+.clickpad[data-nudge="up"] .cp-edge[data-edge="up"],
+.clickpad[data-nudge="down"] .cp-edge[data-edge="down"],
+.clickpad[data-nudge="left"] .cp-edge[data-edge="left"],
+.clickpad[data-nudge="right"] .cp-edge[data-edge="right"] {
+  opacity: 1;
+  transition-duration: 60ms;
+}
+.cp-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 64px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 520;
+  color: var(--text-3);
+  transition: opacity 300ms var(--ease-out);
+  pointer-events: none;
+}
+.clickpad[data-touch] .cp-hint {
+  opacity: 0;
+}
+
+/* ---------- control-style switch (floats on the surface) ---------- */
+.mode {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+.mode-thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.16);
+  transform: translateX(calc(var(--i, 0) * 100%));
+  transition: transform 440ms var(--spring);
+}
+.mode-opt {
+  position: relative;
+  width: 78px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  transition: color var(--dur-ui) var(--ease-out);
+}
+.mode-opt[aria-checked="true"] {
+  color: var(--text-1);
+}
+
+/* ---------- click-ring D-pad ---------- */
+.ring-wrap {
+  display: grid;
+  place-items: center;
+  padding-bottom: 46px;
+  border-radius: var(--pad-r);
+  background: linear-gradient(180deg, #121216, #0b0b0e);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.ring-wrap .dpad {
+  width: min(76vw, 300px, 36dvh);
+}
+.dpad-svg {
+  filter: drop-shadow(0 18px 36px rgb(0 0 0 / 0.6));
+}
+.dpad-plate {
+  fill: #1b1b21;
+  stroke: rgb(255 255 255 / 0.07);
+}
+.wedge-shape {
+  fill: #1b1b21;
+  stroke: #1b1b21;
+}
+.wedge-chevron {
+  stroke: var(--text-3);
+}
+.wedge[data-pressed="true"] .wedge-shape {
+  fill: #2c2c34;
+  stroke: #2c2c34;
+  filter: none;
+}
+.wedge[data-pressed="true"] .wedge-chevron {
+  stroke: var(--text-1);
+}
+.ok {
+  color: var(--text-1);
+  font-size: clamp(15px, 4.4vw, 18px);
+  font-weight: 620;
+  background: radial-gradient(120% 120% at 30% 15%, #34343c 0%, #25252c 55%, #1d1d23 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 10px 24px rgb(0 0 0 / 0.5);
+}
+.ok[data-pressed="true"] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 1px rgb(255 255 255 / 0.18),
+    0 0 30px rgb(255 255 255 / 0.12);
+}
+
+/* ---------- keys + volume rocker ---------- */
+.controls {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  width: 100%;
+  align-items: center;
+}
+.keys {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  justify-items: center;
+}
+.pbtn.key,
+.pbtn.rocker-btn {
+  color: var(--text-1);
+  background: radial-gradient(130% 130% at 30% 15%, #2a2a31 0%, #1c1c22 60%, #16161b 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 10px 22px rgb(0 0 0 / 0.45);
+}
+.pbtn.key {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+}
+.pbtn.key svg,
+.pbtn.rocker-btn svg {
+  width: 26px;
+  height: 26px;
+}
+.pbtn.key:active,
+.pbtn.rocker-btn:active {
+  background: radial-gradient(130% 130% at 30% 15%, #3a3a43 0%, #2a2a31 60%, #202026 100%);
+}
+.rocker {
+  display: grid;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 10px 22px rgb(0 0 0 / 0.45);
+}
+.pbtn.rocker-btn {
+  width: 72px;
+  height: 79px;
+  box-shadow: none;
+}
+.pbtn.rocker-btn:first-child {
+  border-bottom: 1px solid rgb(0 0 0 / 0.45);
+}
+.pbtn.rocker-btn:active {
+  transform: scale(0.97);
+}
+
+@media (max-height: 700px) {
+  .pbtn.key {
+    width: 60px;
+    height: 60px;
+  }
+  .pbtn.rocker-btn {
+    width: 60px;
+    height: 67px;
+  }
+  .keys {
+    gap: 10px;
+  }
+}
+
+/* ---------- tab bar: floating glass ---------- */
+.tabs {
+  margin: 0 18px calc(10px + env(safe-area-inset-bottom));
+  border-radius: 999px;
+  background: rgb(28 28 34 / 0.72);
+  border: 1px solid var(--hairline);
+}
+.tabs-thumb {
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+.tab {
+  min-height: 52px;
+  border-radius: 999px;
+}
+.tab[aria-current="page"] svg {
+  stroke: var(--text-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-light,
+  .cp-edge,
+  .mode-thumb {
+    transition: none;
+  }
+  .clickpad[data-tap] .cp-ripple {
+    animation: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .mode,
+  .tabs {
+    background: var(--surface-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ---------- apps: icons like the TV dock ---------- */
+.apps-grid {
+  gap: 18px 14px;
+}
+.app {
+  display: grid;
+  gap: 9px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+  justify-items: stretch;
+}
+.app::after {
+  display: none;
+}
+.app-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--surface-top, #26262c), var(--surface-base, #17171b));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.4),
+    0 12px 26px rgb(0 0 0 / 0.45);
+  transition:
+    transform var(--dur-release) var(--spring),
+    box-shadow var(--dur-ui) var(--ease-out);
+}
+.app-icon img {
+  width: 62%;
+  height: 62%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.app-wordmark {
+  padding: 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: #fff;
+}
+.app:active .app-icon {
+  transform: scale(0.95);
+  transition-duration: var(--dur-press), 60ms;
+}
+.app[data-state="front"] .app-icon {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 0 0 2px rgb(255 255 255 / 0.85),
+    0 14px 30px rgb(0 0 0 / 0.5);
+}
+.app-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.app-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.app[data-state="front"] .app-title {
+  color: var(--text-1);
+}
+.app-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-1);
+  opacity: 0;
+}
+.app[data-state="running"] .app-dot,
+.app[data-state="front"] .app-dot {
+  opacity: 0.8;
+}
+
+/* Receives the focus for a moment so the phone keyboard opens (see openKeyboard in App.tsx). */
+.kbd-proxy {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  font-size: 16px; /* below 16px iOS zooms the page */
+  pointer-events: none;
+}

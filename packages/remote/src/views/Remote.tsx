@@ -1,62 +1,75 @@
 import { PressButton } from "../components/Buttons.tsx";
-import {
-  IconBack,
-  IconHome,
-  IconMute,
-  IconNext,
-  IconPlayPause,
-  IconPrev,
-  IconVolDown,
-  IconVolUp,
-} from "../icons.tsx";
+import { tick } from "../haptics.ts";
+import { IconBack, IconMinus, IconMute, IconPlayPause, IconPlus, IconTv } from "../icons.tsx";
 import { send } from "../ws.ts";
+import { Clickpad, padMode, setPadMode, type PadMode } from "./Clickpad.tsx";
 import { Dpad } from "./Dpad.tsx";
 
-type Media = "playPause" | "next" | "prev";
-type Vol = "up" | "down" | "mute";
-const media = (action: Media) => () => send({ type: "media", action });
-const volume = (action: Vol) => () => send({ type: "volume", action });
-const button = (name: "back" | "home") => () => send({ type: "button", name });
+const MODES: { id: PadMode; label: string }[] = [
+  { id: "swipe", label: "Swipe" },
+  { id: "dpad", label: "D-pad" },
+];
 
-/** D-pad, Back/Home, then media and volume at the bottom where a thumb rests. */
+function ModeSwitch() {
+  const idx = MODES.findIndex((m) => m.id === padMode.value);
+  return (
+    <div class="mode" role="radiogroup" aria-label="Control style" style={{ "--i": String(idx) }}>
+      <i class="mode-thumb" aria-hidden="true" />
+      {MODES.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          role="radio"
+          aria-checked={padMode.value === m.id}
+          class="mode-opt"
+          onPointerDown={() => {
+            if (padMode.value !== m.id) tick(6);
+            setPadMode(m.id);
+          }}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setPadMode(m.id)}
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** The surface (swipe pad or click-ring) on top; Back/Home/Play/Mute and a volume rocker under the thumb. */
 export function RemoteView() {
   return (
     <div class="remote">
-      <div class="brand" aria-hidden="true">
-        <img class="brand-mark" src="/remote/icon.svg" alt="" />
-        <span class="brand-name">TVDeck</span>
-        <span>Your PC, on the big screen</span>
+      <div class="surface">
+        {padMode.value === "swipe" ? (
+          <Clickpad />
+        ) : (
+          <div class="ring-wrap">
+            <Dpad />
+          </div>
+        )}
+        <ModeSwitch />
       </div>
-      <Dpad />
-      <div class="actions">
-        <PressButton class="pill" label="Back" showLabel onPress={button("back")}>
-          <IconBack />
-        </PressButton>
-        <PressButton class="pill" label="Home" showLabel onPress={button("home")}>
-          <IconHome />
-        </PressButton>
-      </div>
-      <div class="deck" role="group" aria-label="Media and volume">
-        <div class="cluster" role="group" aria-label="Media">
-          <PressButton class="round" label="Previous" onPress={media("prev")}>
-            <IconPrev />
+      <div class="controls">
+        <div class="keys" role="group" aria-label="Buttons">
+          <PressButton class="key" label="Back" onPress={() => send({ type: "button", name: "back" })}>
+            <IconBack />
           </PressButton>
-          <PressButton class="round primary" label="Play or pause" onPress={media("playPause")}>
+          <PressButton class="key" label="Home" onPress={() => send({ type: "button", name: "home" })}>
+            <IconTv />
+          </PressButton>
+          <PressButton class="key" label="Play or pause" onPress={() => send({ type: "media", action: "playPause" })}>
             <IconPlayPause />
           </PressButton>
-          <PressButton class="round" label="Next" onPress={media("next")}>
-            <IconNext />
-          </PressButton>
-        </div>
-        <div class="cluster" role="group" aria-label="Volume">
-          <PressButton class="round" label="Volume down" repeat onPress={volume("down")}>
-            <IconVolDown />
-          </PressButton>
-          <PressButton class="round" label="Mute" onPress={volume("mute")}>
+          <PressButton class="key" label="Mute" onPress={() => send({ type: "volume", action: "mute" })}>
             <IconMute />
           </PressButton>
-          <PressButton class="round" label="Volume up" repeat onPress={volume("up")}>
-            <IconVolUp />
+        </div>
+        <div class="rocker" role="group" aria-label="Volume">
+          <PressButton class="rocker-btn" label="Volume up" repeat onPress={() => send({ type: "volume", action: "up" })}>
+            <IconPlus />
+          </PressButton>
+          <PressButton class="rocker-btn" label="Volume down" repeat onPress={() => send({ type: "volume", action: "down" })}>
+            <IconMinus />
           </PressButton>
         </div>
       </div>

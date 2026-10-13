@@ -130,7 +130,9 @@ The remote sleeps when idle and reconnects on the next press; TVDeck looks for i
 
 ## Phone remote notes
 
-- Three tabs: Remote (D-pad, OK, Back, Home, media, volume), Touchpad (drag to move, tap to click, two-finger tap to right-click, two-finger drag to scroll) and Apps.
+- Three tabs: Remote, Touchpad (drag to move, tap to click, two-finger tap to right-click, two-finger drag to scroll) and Apps (the launcher tiles with their icons; tap to open).
+- Remote tab: a swipe surface — swipe to move one step, a long flick moves several, keep the finger down to keep moving, tap for OK. Switch to **D-pad** (a click-ring with OK in the middle) with the Swipe / D-pad control at the bottom of the surface; the choice is remembered. Under it: Back, Home, Play/Pause, Mute and a volume rocker (hold to repeat).
+- The keyboard button (top right) opens the text field with the phone keyboard up.
 - Text typed in the field on the Touchpad tab is typed on the PC; Backspace, Space, Enter and Tab have their own buttons.
 - If the PC can't be reached for about 5 seconds the remote shows "TV is offline" and keeps retrying (Try now skips the wait). That is different from "Not paired", which means the phone has no valid credentials.
 - With Windows "Enhance pointer precision" on, pointer speed gets double acceleration. Turn it off for a predictable feel, or use Slow/Normal/Fast on the phone.
