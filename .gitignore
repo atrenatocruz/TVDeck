@@ -5,3 +5,6 @@ config/icons/*
 !config/icons/.gitkeep
 *.log
 .env
+
+# built by npm run app:build
+/app/

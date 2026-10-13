@@ -104,6 +104,21 @@ Everything the server prints is also written to `%LOCALAPPDATA%\TVDeck\logs\tvde
 
 `npm run spike:input`, `spike:home` and `spike:m4` are manual checks that open and close their own windows (a throwaway Edge page that records key and mouse events, a stand-in launcher for Home against Notepad, fullscreen Edge and Steam Big Picture). Each prints PASS, FAIL or SKIP per step and never injects input unless its target window is in front. Do not touch the keyboard or mouse while one runs. `TVDECK_DRY_INPUT=1` prints every input as `[dry-input] ...` instead of sending it.
 
+## TVDeck app (Start menu / Desktop)
+
+```
+npm run build
+npm run app:install
+```
+
+`app:install` builds `app\TVDeck.exe` (with the TVDeck icon, compiled by the C# compiler that ships with Windows) and adds **TVDeck** shortcuts to the Start menu and the Desktop. Right-click it in the Start menu to pin it to Start or the taskbar.
+
+- TVDeck running: the app brings the launcher to the front (it writes `home.request` in the data folder; the server checks that file twice a second).
+- TVDeck not running: it starts it hidden, through the `TVDeck` logon task if installed (`npm run autostart:install`), otherwise directly; the launcher opens by itself.
+- Not built yet: it says to run `npm run build`.
+
+The phone remote's home-screen icon uses the same logo (`packages/remote/public/icon.svg`; `npm run icons` regenerates the PNGs).
+
 ## Xiaomi Bluetooth remote
 
 A paired Xiaomi Mi Box S remote (XMRM-006) works as a second remote next to the phone. Every button runs the same code path as the matching phone button.

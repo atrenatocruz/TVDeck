@@ -19,7 +19,9 @@
     "spike:m4": "npm run spike:m4 -w @tvdeck/server",
     "remote:probe": "npm run remote:probe -w @tvdeck/server",
     "devices": "npm run devices -w @tvdeck/server --",
-    "dev:headless": "npm run dev:headless -w @tvdeck/server"
+    "dev:headless": "npm run dev:headless -w @tvdeck/server",
+    "app:build": "node scripts/build-app.mjs",
+    "app:install": "npm run app:build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/app-install.ps1"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

@@ -9,6 +9,8 @@ import { createAppService } from "./apps/service.ts";
 import { ensureTilesFile } from "./config/load.ts";
 import { watchTiles } from "./config/watch.ts";
 import { startRemoteSupport } from "./remote/index.ts";
+import { watchHomeRequests } from "./apps/homeRequest.ts";
+import { pressHome } from "./dispatch.ts";
 import { createHttp } from "./http.ts";
 import { lanAddresses, publicBase, publicHost, setDetectedBase } from "./lan.ts";
 import { enableFileLog, log } from "./log.ts";
@@ -88,6 +90,7 @@ async function main() {
     () => tiles.current().config.rows.flatMap((r) => r.tiles),
     apps,
   );
+  const stopHomeRequests = watchHomeRequests(dataDir(), () => pressHome(apps));
   if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
   else {
     void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
@@ -97,6 +100,7 @@ async function main() {
   const shutdown = async () => {
     log.info("main", "shutting down");
     stopWatchdog();
+    stopHomeRequests();
     remoteSupport.stop();
     apps.stop();
     ws.close();
