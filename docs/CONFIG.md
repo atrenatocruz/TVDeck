@@ -85,7 +85,8 @@ An optional top-level `remote` block (next to `rows`) changes what the paired Xi
     "netflix": { "open": "netflix" },
     "prime": { "open": "prime" },
     "apps": "home",
-    "assistant": "none"
+    "assistant": "none",
+    "power": "home"
   },
   "hid": { "vendorId": 10007, "productId": 12985 }
 }

@@ -111,7 +111,8 @@ describe("remote config", () => {
   it("validates with zod", () => {
     expect(RemoteConfig.safeParse({ buttons: { netflix: { open: "nf" }, apps: "home", assistant: "none" }, hid: { vendorId: 1 } }).success).toBe(true);
     expect(RemoteConfig.safeParse({ buttons: { netflix: "launch" } }).success).toBe(false);
-    expect(RemoteConfig.safeParse({ buttons: { power: "home" } }).success).toBe(false);
+    expect(RemoteConfig.safeParse({ buttons: { power: "home" } }).success).toBe(true);
+    expect(RemoteConfig.safeParse({ buttons: { mic: "home" } }).success).toBe(false);
     expect(RemoteConfig.safeParse({ hid: { vendorId: -1 } }).success).toBe(false);
   });
 });
