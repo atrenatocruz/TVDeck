@@ -336,11 +336,10 @@ code {
 /* ---------- welcome, weather, day ---------- */
 .welcome {
   margin: 0;
-  font-size: calc(40 * var(--u));
-  font-weight: 640;
-  letter-spacing: -0.02em;
-  color: var(--text-1);
-  text-shadow: 0 calc(2 * var(--u)) calc(18 * var(--u)) rgb(0 0 0 / 0.35);
+  font-size: calc(32 * var(--u));
+  font-weight: 560;
+  letter-spacing: 0.005em;
+  color: var(--text-2);
 }
 .weather {
   display: inline-flex;
