@@ -1,7 +1,7 @@
 import type { ServerMsg, Tile } from "@tvdeck/protocol";
 import { log } from "../log.ts";
 import { bringToFront, getLauncherWindow } from "../win32/foreground.ts";
-import { native } from "../win32/user32.ts";
+import { native, WM_CLOSE } from "../win32/user32.ts";
 import { describeWindow, listTopLevelWindows } from "../win32/windows.ts";
 import { backKeysFor } from "./back.ts";
 import { classifyForeground, sameState, type ForegroundState, type FullState } from "./foregroundState.ts";
@@ -34,6 +34,8 @@ export interface AppService {
   refresh(): void;
   /** Home was pressed: an app that is still opening must not pull itself back to the front. */
   noteHome(): void;
+  /** Closes every app window TVDeck opened (WM_CLOSE, like clicking X). Returns how many. */
+  closeAll(): number;
   start(): void;
   stop(): void;
 }
@@ -111,6 +113,12 @@ export function createAppService(
     state: () => toMsg(last),
     refresh,
     noteHome: () => void (homeAt = Date.now()),
+    closeAll() {
+      const hwnds = [...tracker.trackedHwnds()];
+      for (const h of hwnds) native.PostMessage(h, WM_CLOSE, 0, 0);
+      refresh();
+      return hwnds.length;
+    },
     start() {
       if (!native.available || timer) return;
       timer = setInterval(refresh, POLL_MS);

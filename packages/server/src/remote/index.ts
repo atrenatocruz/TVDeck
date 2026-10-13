@@ -1,6 +1,6 @@
 import type { Tile, TilesConfig } from "@tvdeck/protocol";
 import type { AppService } from "../apps/service.ts";
-import { pressBack, pressHome } from "../dispatch.ts";
+import { pressBack, pressHome, pressPower } from "../dispatch.ts";
 import { InputGuard } from "../inputGuard.ts";
 import { log } from "../log.ts";
 import { tapKey } from "../win32/input.ts";
@@ -27,10 +27,12 @@ export function startRemoteSupport(
   const dry = DRY();
   const home = () => (dry ? log.info("remote", "[dry] home") : pressHome(apps));
   const back = () => pressBack(apps); // chord() already honours TVDECK_DRY_INPUT
+  const power = () => (dry ? log.info("remote", "[dry] power") : pressPower(apps));
   const buttons = new RemoteButtons({
     tap: tapKey,
     home,
     back,
+    power,
     open: async (id) => {
       if (dry) return log.info("remote", `[dry] open ${id}`);
       await apps.open(id);

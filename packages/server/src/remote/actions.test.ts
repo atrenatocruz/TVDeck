@@ -8,6 +8,7 @@ function make(over: Partial<ButtonDeps> = {}) {
     tap: (k) => void calls.push(`tap:${k}`),
     home: () => void calls.push("home"),
     back: () => void calls.push("back"),
+    power: () => void calls.push("power"),
     open: async (id) => void calls.push(`open:${id}`),
     hasTile: (id) => id !== "ghost",
     buttons: () => DEFAULT_BUTTONS,
@@ -86,6 +87,14 @@ describe("RemoteButtons", () => {
     b.press("prime");
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatch(/^warn:.*ghost/);
+  });
+  it("Power runs the power action by default", () => {
+    const { b, calls } = make();
+    b.press("power");
+    expect(calls).toEqual(["power"]);
+    const h = make({ buttons: () => ({ ...DEFAULT_BUTTONS, power: "home" }) });
+    h.b.press("power");
+    expect(h.calls).toEqual(["home"]);
   });
   it("supports back and honours the guard", () => {
     const { b, calls } = make({ buttons: () => ({ ...DEFAULT_BUTTONS, assistant: "back" }) });

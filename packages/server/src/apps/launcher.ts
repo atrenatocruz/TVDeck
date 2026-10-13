@@ -4,7 +4,7 @@ import path from "node:path";
 import { log } from "../log.ts";
 import { dataDir, findEdge } from "../paths.ts";
 import { bringToFront, setLauncherResolver, setLauncherWindow } from "../win32/foreground.ts";
-import { native } from "../win32/user32.ts";
+import { native, WM_CLOSE } from "../win32/user32.ts";
 import { findWindow, waitForWindow, type WinInfo } from "../win32/windows.ts";
 import { buildLauncherArgs, LAUNCHER_TITLE } from "./edge.ts";
 import { LauncherWatchdog } from "./watchdog.ts";
@@ -30,6 +30,18 @@ function spawnLauncher(port: number, key: string): boolean {
 }
 
 let inflight: Promise<number | null> | null = null;
+
+/** Set by "power off" so the watchdog doesn't bring the closed launcher back; cleared by Home/Power. */
+let watchdogPaused = false;
+
+/** Closes the launcher window and keeps it closed until the next Home (or Power) press. */
+export function closeLauncher(): boolean {
+  watchdogPaused = true;
+  const w = findLauncherWindow();
+  if (!w) return false;
+  native.PostMessage(w.hwnd, WM_CLOSE, 0, 0);
+  return true;
+}
 
 /** Finds the launcher window or starts it; remembers the HWND. Concurrent calls share one attempt. */
 export function ensureLauncher(port: number, key: string): Promise<number | null> {
@@ -64,6 +76,7 @@ export function ensureLauncher(port: number, key: string): Promise<number | null
 /** Wires Home so it can re-find or relaunch the launcher when the window is gone. */
 export function registerLauncher(port: number, key: string): void {
   setLauncherResolver(async (step) => {
+    watchdogPaused = false;
     const found = findLauncherWindow();
     if (found) {
       step("re-found launcher window");
@@ -82,6 +95,7 @@ export function startLauncherWatchdog(port: number, key: string, intervalMs = 10
   if (!native.available) return () => {};
   const dog = new LauncherWatchdog();
   const timer = setInterval(() => {
+    if (watchdogPaused) return;
     const present = !!findLauncherWindow();
     if (!dog.tick(Date.now(), present, inflight !== null)) return;
     log.warn("launcher", "launcher window is gone; relaunching");

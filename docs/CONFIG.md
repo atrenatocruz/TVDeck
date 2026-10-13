@@ -86,13 +86,13 @@ An optional top-level `remote` block (next to `rows`) changes what the paired Xi
     "prime": { "open": "prime" },
     "apps": "home",
     "assistant": "none",
-    "power": "home"
+    "power": "power"
   },
   "hid": { "vendorId": 10007, "productId": 12985 }
 }
 ```
 
-An action is `"home"` (bring the launcher), `"back"` (the per-tile Back), `"none"`, or `{ "open": "<tile id>" }`. A button that opens a tile id that does not exist logs a warning and does nothing. `hid` only needs setting for a different remote model (decimal numbers; the defaults are 0x2717 / 0x32b9). See [SETUP.md](SETUP.md#xiaomi-bluetooth-remote) for pairing and the other buttons.
+An action is `"home"` (bring the launcher), `"back"` (the per-tile Back), `"power"` (launcher open: close it and the apps TVDeck opened, then sleep the PC; launcher closed: open it), `"none"`, or `{ "open": "<tile id>" }`. A button that opens a tile id that does not exist logs a warning and does nothing. `hid` only needs setting for a different remote model (decimal numbers; the defaults are 0x2717 / 0x32b9). See [SETUP.md](SETUP.md#xiaomi-bluetooth-remote) for pairing and the other buttons.
 
 ## Home screen extras
 

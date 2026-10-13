@@ -31,9 +31,12 @@ export const Row = z.object({
   tiles: z.array(Tile),
 });
 
-/** What a physical remote button does: bring the launcher, send Back, nothing, or open a tile. */
+/**
+ * What a physical remote button does: bring the launcher, send Back, nothing, open a tile, or "power"
+ * (launcher open: close it and the apps, then sleep the PC; launcher closed: open it).
+ */
 export const RemoteAction = z.union([
-  z.enum(["home", "back", "none"]),
+  z.enum(["home", "back", "none", "power"]),
   z.object({ open: z.string().min(1) }).strict(),
 ]);
 

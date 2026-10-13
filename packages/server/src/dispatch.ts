@@ -1,8 +1,10 @@
 import type { ClientMsg, ServerMsg } from "@tvdeck/protocol";
+import { closeLauncher, findLauncherWindow } from "./apps/launcher.ts";
 import type { AppService } from "./apps/service.ts";
 import { InputGuard } from "./inputGuard.ts";
 import { log } from "./log.ts";
 import { goHome } from "./win32/foreground.ts";
+import { sleepPc } from "./win32/power.ts";
 import { chord, mouseClick, mouseMove, mouseScroll, tapKey, typeText } from "./win32/input.ts";
 import type { KeyName } from "./win32/keymap.ts";
 
@@ -19,6 +21,26 @@ export function pressBack(apps?: AppService): void {
   const keys = apps?.backKeys() ?? ["esc"];
   log.info("input", `back -> ${keys.join("+")}`);
   chord(keys);
+}
+
+/** Delay between closing the windows and sleeping, so Edge can close them cleanly. */
+export const SLEEP_DELAY_MS = 1500;
+
+/**
+ * Remote "Power": like a TV box. With the launcher open, close the apps TVDeck opened and the launcher,
+ * then put the PC to sleep. With the launcher closed (after a power-off, or closed by hand), bring it back.
+ */
+export function pressPower(apps?: AppService): void {
+  if (!findLauncherWindow()) {
+    log.info("power", "launcher is closed: opening it");
+    return pressHome(apps);
+  }
+  const closed = apps?.closeAll() ?? 0;
+  closeLauncher();
+  log.info("power", `closed the launcher and ${closed} app window(s); sleeping in ${SLEEP_DELAY_MS / 1000} s`);
+  setTimeout(() => {
+    if (!sleepPc()) log.warn("power", "Windows did not accept the sleep request");
+  }, SLEEP_DELAY_MS);
 }
 
 /** Remote "Home": bring the launcher forward, leave every app running. */

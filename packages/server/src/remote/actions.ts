@@ -10,7 +10,7 @@ export const DEFAULT_BUTTONS: ResolvedButtons = {
   prime: { open: "prime" },
   apps: "home",
   assistant: "none",
-  power: "home",
+  power: "power",
 };
 
 export function resolveButtons(cfg?: RemoteConfig): ResolvedButtons {
@@ -32,6 +32,7 @@ export interface ButtonDeps {
   tap(key: KeyName): void;
   home(): void;
   back(): void;
+  power(): void;
   open(tileId: string): Promise<void>;
   hasTile(tileId: string): boolean;
   buttons(): ResolvedButtons;
@@ -96,6 +97,7 @@ export class RemoteButtons {
     if (!this.d.allow()) return;
     if (action === "home") return this.d.home();
     if (action === "back") return this.d.back();
+    if (action === "power") return this.d.power();
     const id = action.open;
     if (!this.d.hasTile(id)) {
       this.d.warn(`${name} button is mapped to tile "${id}", which does not exist in tiles.json`);
