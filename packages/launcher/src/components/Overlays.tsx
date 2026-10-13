@@ -94,6 +94,9 @@ function PairOverlay() {
     if (st === "connected") send({ type: "pairingStart" });
   }, [st]);
 
+  // closing the overlay invalidates the code at once (an abandoned QR must not stay valid)
+  useEffect(() => () => void send({ type: "pairingCancel" }), []);
+
   // replace the code the moment it expires
   useEffect(() => {
     if (!p || flash) return;

@@ -7,6 +7,7 @@ import { bringToFront, setLauncherResolver, setLauncherWindow } from "../win32/f
 import { native } from "../win32/user32.ts";
 import { findWindow, waitForWindow, type WinInfo } from "../win32/windows.ts";
 import { buildLauncherArgs, LAUNCHER_TITLE } from "./edge.ts";
+import { LauncherWatchdog } from "./watchdog.ts";
 
 const isLauncherWindow = (w: WinInfo) =>
   w.title === LAUNCHER_TITLE && w.processName.toLowerCase() === "msedge.exe" && w.visible;
@@ -71,4 +72,21 @@ export function registerLauncher(port: number, key: string): void {
     step("relaunching launcher");
     return ensureLauncher(port, key);
   });
+}
+
+/**
+ * Keeps the launcher alive: if its window disappears (Edge crashed, or someone closed it) while the
+ * server runs, start it again after ~5 s. Backs off when it keeps dying. Returns a stop function.
+ */
+export function startLauncherWatchdog(port: number, key: string, intervalMs = 1000): () => void {
+  if (!native.available) return () => {};
+  const dog = new LauncherWatchdog();
+  const timer = setInterval(() => {
+    const present = !!findLauncherWindow();
+    if (!dog.tick(Date.now(), present, inflight !== null)) return;
+    log.warn("launcher", "launcher window is gone; relaunching");
+    void ensureLauncher(port, key).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
+  }, intervalMs);
+  timer.unref();
+  return () => clearInterval(timer);
 }

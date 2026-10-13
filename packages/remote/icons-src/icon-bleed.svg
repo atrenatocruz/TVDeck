@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Full-bleed variant of public/icon.svg for maskable and apple-touch icons.
+       The artwork stays inside the central 80% safe zone so any mask shape keeps it intact. -->
+  <defs>
+    <radialGradient id="g" cx="50%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#2a2f4a"/>
+      <stop offset="1" stop-color="#0b0d12"/>
+    </radialGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c3bbff"/>
+      <stop offset="1" stop-color="#7f8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#ffffff" stroke-opacity=".12" stroke-width="28"/>
+  <path d="M256 106a150 150 0 0 1 106 44" fill="none" stroke="url(#a)" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="62" fill="url(#a)"/>
+</svg>

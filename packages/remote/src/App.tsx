@@ -1,3 +1,4 @@
+import { Offline } from "./components/Offline.tsx";
 import { Unpaired } from "./components/Unpaired.tsx";
 import { tick } from "./haptics.ts";
 import { IconApps, IconRemote, IconTouchpad } from "./icons.tsx";
@@ -11,6 +12,7 @@ const STATUS_TEXT = {
   connecting: "Connecting",
   connected: "Connected",
   reconnecting: "Reconnecting",
+  offline: "Offline",
   unpaired: "Not paired",
 } as const;
 
@@ -119,6 +121,7 @@ export function App() {
       <Panels />
       <Toast />
       <TabBar />
+      {status.value === "offline" ? <Offline /> : null}
     </div>
   );
 }

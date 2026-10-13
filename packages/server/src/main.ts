@@ -4,14 +4,15 @@ import { fileURLToPath } from "node:url";
 import { Devices, watchDevices } from "./auth/devices.ts";
 import { Pairing } from "./auth/pairing.ts";
 import { loadOrCreateSecrets } from "./auth/sharedToken.ts";
-import { ensureLauncher, registerLauncher } from "./apps/launcher.ts";
+import { ensureLauncher, registerLauncher, startLauncherWatchdog } from "./apps/launcher.ts";
 import { createAppService } from "./apps/service.ts";
 import { ensureTilesFile } from "./config/load.ts";
 import { watchTiles } from "./config/watch.ts";
 import { createHttp } from "./http.ts";
-import { lanAddresses, publicBase } from "./lan.ts";
-import { log } from "./log.ts";
-import { dataDir, TILES_EXAMPLE, TILES_FILE } from "./paths.ts";
+import { lanAddresses, publicBase, publicHost, setDetectedBase } from "./lan.ts";
+import { enableFileLog, log } from "./log.ts";
+import { dataDir, LAUNCHER_DIST, REMOTE_DIST, TILES_EXAMPLE, TILES_FILE } from "./paths.ts";
+import { detectTailscaleBase } from "./tailscale.ts";
 import { attachWebSocket } from "./ws.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -20,7 +21,17 @@ const production = process.argv.includes("--production") || process.env.NODE_ENV
 const noLauncher = process.argv.includes("--no-launcher") || process.env.TVDECK_NO_LAUNCHER === "1";
 const port = Number(process.env.TVDECK_PORT ?? 7420);
 
+const bind = process.env.TVDECK_BIND?.trim() || "0.0.0.0";
+
 async function main() {
+  enableFileLog(path.join(dataDir(), "logs", "tvdeck.log"));
+  if (production) {
+    const missing = [["remote", REMOTE_DIST], ["launcher", LAUNCHER_DIST]].filter(([, d]) => !fs.existsSync(path.join(d!, "index.html")));
+    if (missing.length) {
+      log.error("main", `the ${missing.map(([n]) => n).join(" and ")} app has not been built. Run "npm run build" first, then "npm start".`);
+      process.exit(1);
+    }
+  }
   const { token, launcherKey } = loadOrCreateSecrets();
   if (ensureTilesFile(TILES_FILE, TILES_EXAMPLE)) log.info("config", `created ${TILES_FILE} from the example`);
   let broadcast: (s: import("./config/watch.ts").TilesState) => void = () => {};
@@ -35,7 +46,7 @@ async function main() {
   if (allowShared) log.warn("auth", "TVDECK_ALLOW_SHARED_TOKEN=1: the shared token is accepted. Prefer pairing; unset this when done.");
   const devices = new Devices(path.join(dataDir(), "devices.json"));
   const ctx = { sharedToken: token, launcherKey, allowShared, devices, pairing: new Pairing() };
-  const ws = attachWebSocket(server, ctx, version, tiles.current, apps, { publicBase: () => publicBase(port) });
+  const ws = attachWebSocket(server, ctx, version, tiles.current, apps, { publicBase: () => publicBase(port), publicHost: () => publicHost() });
   // The CLI (npm run devices) edits devices.json directly: pick that up and cut revoked sockets.
   const devWatch = watchDevices(devices, (ids) => ws.closeDevices(ids), () => ws.broadcastDevices());
   broadcast = ws.broadcastTiles;
@@ -46,7 +57,15 @@ async function main() {
     process.exit(1);
   });
 
-  await new Promise<void>((resolve) => server.listen(port, "0.0.0.0", resolve));
+  await new Promise<void>((resolve) => server.listen(port, bind, resolve));
+
+  // Pairing base: TVDECK_PUBLIC_URL, else https from `tailscale serve` if configured for this port, else the LAN.
+  if (process.env.TVDECK_PUBLIC_URL?.trim()) log.info("net", `pairing base from TVDECK_PUBLIC_URL: ${publicBase(port)}`);
+  else {
+    const ts = await detectTailscaleBase(port);
+    setDetectedBase(ts);
+    log.info("net", ts ? `pairing base from tailscale serve: ${ts}` : `no tailscale serve for port ${port} (or tailscale CLI not found); pairing base is the LAN address ${publicBase(port)}`);
+  }
 
   const { lan, tailscale } = lanAddresses();
   const bar = "-".repeat(64);
@@ -58,15 +77,20 @@ async function main() {
   if (devices.listInfo().length === 0) console.log("\n  No phones are paired yet.");
   console.log("\n  First run: Windows Firewall may ask to allow Node.js - choose Private networks.");
   console.log(`${bar}\n`);
-  log.info("http", `listening on 0.0.0.0:${port}`);
+  log.info("http", `listening on ${bind}:${port}`);
 
+  let stopWatchdog = () => {};
   registerLauncher(port, launcherKey);
   apps.start();
   if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
-  else void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
+  else {
+    void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
+    stopWatchdog = startLauncherWatchdog(port, launcherKey);
+  }
 
   const shutdown = async () => {
     log.info("main", "shutting down");
+    stopWatchdog();
     apps.stop();
     ws.close();
     tiles.close();

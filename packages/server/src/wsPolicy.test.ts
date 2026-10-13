@@ -34,6 +34,31 @@ describe("isOriginAllowed", () => {
   });
 });
 
+describe("isOriginAllowed behind tailscale serve", () => {
+  const ts = "livingroom.tail1234.ts.net";
+  it("accepts when serve forwards the public Host unchanged", () => {
+    expect(isOriginAllowed(`https://${ts}`, ts, { remoteAddress: "127.0.0.1" })).toBe(true);
+  });
+  it("accepts an Origin equal to the configured public host even if Host was rewritten", () => {
+    expect(isOriginAllowed(`https://${ts}`, "127.0.0.1:7420", { publicHost: ts })).toBe(true);
+    expect(isOriginAllowed("https://evil.example", "127.0.0.1:7420", { publicHost: ts })).toBe(false);
+  });
+  it("trusts X-Forwarded-Host only from a loopback peer", () => {
+    const base = { forwardedHost: ts };
+    expect(isOriginAllowed(`https://${ts}`, "127.0.0.1:7420", { ...base, remoteAddress: "127.0.0.1" })).toBe(true);
+    expect(isOriginAllowed(`https://${ts}`, "127.0.0.1:7420", { ...base, remoteAddress: "::1" })).toBe(true);
+    expect(isOriginAllowed(`https://${ts}`, "127.0.0.1:7420", { ...base, remoteAddress: "::ffff:127.0.0.1" })).toBe(true);
+    expect(isOriginAllowed(`https://${ts}`, "192.168.1.5:7420", { ...base, remoteAddress: "192.168.1.77" })).toBe(false);
+    expect(isOriginAllowed(`https://${ts}`, "192.168.1.5:7420", { ...base })).toBe(false);
+  });
+  it("a spoofed forwarded host does not let a foreign origin through", () => {
+    expect(isOriginAllowed("https://evil.example", "127.0.0.1:7420", { forwardedHost: ts, remoteAddress: "127.0.0.1" })).toBe(false);
+  });
+  it("still requires an Origin", () => {
+    expect(isOriginAllowed(undefined, ts, { publicHost: ts, remoteAddress: "127.0.0.1" })).toBe(false);
+  });
+});
+
 describe("decideAuth", () => {
   it("rejects the shared token by default and accepts it when enabled (remote only)", () => {
     const off = makeCtx(false);

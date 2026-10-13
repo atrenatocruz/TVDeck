@@ -8,7 +8,10 @@
   "scripts": {
     "dev": "npm run dev -w @tvdeck/server",
     "build": "npm run build -w @tvdeck/remote && npm run build -w @tvdeck/launcher",
-    "start": "npm run start -w @tvdeck/server",
+    "start": "npm run start -w @tvdeck/server --",
+    "icons": "node scripts/gen-icons.mjs",
+    "autostart:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/autostart-install.ps1",
+    "autostart:remove": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/autostart-remove.ps1",
     "test": "vitest run",
     "typecheck": "tsc -p packages/protocol && tsc -p packages/server && tsc -p packages/remote && tsc -p packages/launcher",
     "spike:input": "npm run spike:input -w @tvdeck/server",
@@ -19,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
+    "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "~5.9.3",
     "vitest": "^5.0.4"

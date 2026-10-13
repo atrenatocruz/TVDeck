@@ -42,12 +42,13 @@ export const ClientMsg = z.discriminatedUnion("type", [
   z.object({ type: z.literal("openApp"), tileId: z.string().max(100) }),
   // launcher-only
   z.object({ type: z.literal("pairingStart") }),
+  z.object({ type: z.literal("pairingCancel") }),
   z.object({ type: z.literal("deviceRevoke"), deviceId: z.string().max(100) }),
   z.object({ type: z.literal("ping"), t: z.number() }),
 ]);
 
 /** Messages only the launcher may send. */
-export const LAUNCHER_ONLY = new Set<ClientMsg["type"]>(["pairingStart", "deviceRevoke"]);
+export const LAUNCHER_ONLY = new Set<ClientMsg["type"]>(["pairingStart", "pairingCancel", "deviceRevoke"]);
 
 // ---- server → client ----
 

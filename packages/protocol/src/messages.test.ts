@@ -40,3 +40,11 @@ describe("ServerMsg state", () => {
     expect(ServerMsg.safeParse({ type: "state", foreground: "app", running: [1] }).success).toBe(false);
   });
 });
+
+describe("pairingCancel", () => {
+  it("parses and is launcher-only", async () => {
+    const { LAUNCHER_ONLY, parseClientMsg } = await import("./messages.ts");
+    expect(parseClientMsg('{"type":"pairingCancel"}')).toEqual({ type: "pairingCancel" });
+    expect(LAUNCHER_ONLY.has("pairingCancel")).toBe(true);
+  });
+});

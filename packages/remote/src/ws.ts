@@ -2,7 +2,7 @@ import { signal } from "@preact/signals";
 import type { ClientMsg, CloseCode, ServerMsg, TilesConfig } from "@tvdeck/protocol";
 import { clearDeviceToken, clearLegacyToken, defaultDeviceName, loadDeviceToken, loadLegacyToken, saveDeviceToken, saveLegacyToken } from "./credentials.ts";
 
-export type ConnStatus = "connecting" | "connected" | "reconnecting" | "unpaired";
+export type ConnStatus = "connecting" | "connected" | "reconnecting" | "offline" | "unpaired";
 /** Why the "Not paired" screen is showing. */
 export type UnpairedReason = "none" | "expired" | "removed";
 
@@ -11,7 +11,18 @@ const REVOKED: typeof CloseCode.revoked = 4004;
 
 export const status = signal<ConnStatus>("connecting");
 export const unpairedReason = signal<UnpairedReason>("none");
-export const pcName = signal<string | null>(null);
+const NAME_KEY = "tvdeck.pcName";
+const readName = () => {
+  try {
+    return localStorage.getItem(NAME_KEY);
+  } catch {
+    return null;
+  }
+};
+export const pcName = signal<string | null>(readName());
+/** After this long without a connection the remote shows the calm "TV is offline" screen. */
+const OFFLINE_AFTER_MS = 5000;
+let offlineTimer: number | undefined;
 /** Title of the app in front on the TV, or null when it is the launcher or something else. */
 export const frontApp = signal<string | null>(null);
 /** Launcher tiles, tileIds with a live window, and the tile in front (for the Apps tab). */
@@ -56,9 +67,23 @@ let lastRx = 0;
 let stopped = false;
 let cred: Cred | null = null;
 
+/** Starts the 5 s clock the first time a connection attempt is outstanding; cleared on welcome. */
+function armOffline(): void {
+  if (offlineTimer !== undefined) return;
+  offlineTimer = window.setTimeout(() => {
+    offlineTimer = undefined;
+    if (!stopped && status.value !== "connected") status.value = "offline";
+  }, OFFLINE_AFTER_MS);
+}
+function disarmOffline(): void {
+  clearTimeout(offlineTimer);
+  offlineTimer = undefined;
+}
+
 function scheduleReconnect(): void {
   if (stopped) return;
-  status.value = "reconnecting";
+  armOffline();
+  if (status.value !== "offline") status.value = "reconnecting";
   clearTimeout(retryTimer);
   const base = Math.min(5000, 500 * 2 ** attempt);
   attempt++;
@@ -69,7 +94,8 @@ function connect(): void {
   if (stopped || !cred) return;
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
   clearTimeout(retryTimer);
-  if (status.value !== "reconnecting") status.value = "connecting";
+  if (status.value !== "reconnecting" && status.value !== "offline") status.value = "connecting";
+  armOffline();
 
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/ws`);
@@ -100,6 +126,7 @@ function connect(): void {
       markUnpaired("removed");
     } else if (msg.type === "welcome") {
       attempt = 0;
+      disarmOffline();
       unpairedReason.value = "none";
       status.value = "connected";
     } else if (msg.type === "tiles") {
@@ -138,6 +165,7 @@ function connect(): void {
 function markUnpaired(reason: UnpairedReason): void {
   if (status.value === "unpaired") return;
   stopped = true;
+  disarmOffline();
   unpairedReason.value = reason;
   status.value = "unpaired";
   if (cred?.kind !== "pair") {
@@ -161,11 +189,24 @@ function reconnectNow(): void {
   connect();
 }
 
+/** "Try now" on the offline screen: skip the back-off wait. */
+export function retryNow(): void {
+  clearTimeout(retryTimer);
+  reconnectNow();
+}
+
 export async function startConnection(): Promise<void> {
   const hash = takeHash();
   void fetch("/healthz")
     .then((r) => r.json() as Promise<{ name?: string }>)
-    .then((j) => void (pcName.value = j.name ?? null))
+    .then((j) => {
+      pcName.value = j.name ?? null;
+      try {
+        if (j.name) localStorage.setItem(NAME_KEY, j.name);
+      } catch {
+        /* private mode */
+      }
+    })
     .catch(() => {});
 
   const device = await loadDeviceToken();

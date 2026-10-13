@@ -49,4 +49,12 @@ describe("Pairing", () => {
   it("rejects everything when nothing was started", () => {
     expect(new Pairing(clock().now).redeem("anything")).toBe(false);
   });
+  it("cancel invalidates the outstanding code", () => {
+    const p = new Pairing(clock().now);
+    const { code } = p.start();
+    expect(p.cancel()).toBe(true);
+    expect(p.hasActive()).toBe(false);
+    expect(p.redeem(code)).toBe(false);
+    expect(p.cancel()).toBe(false);
+  });
 });

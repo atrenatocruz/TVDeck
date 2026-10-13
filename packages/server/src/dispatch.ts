@@ -84,6 +84,7 @@ export function dispatch(
       });
       break;
     case "pairingStart":
+    case "pairingCancel":
     case "deviceRevoke":
       break; // handled by the socket layer (needs the pairing/device stores)
     case "hello":

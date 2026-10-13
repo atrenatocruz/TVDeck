@@ -1,4 +1,5 @@
 {
+  "id": "/remote/",
   "name": "TVDeck Remote",
   "short_name": "TVDeck",
   "description": "Phone remote for your TVDeck PC",
@@ -8,5 +9,10 @@
   "orientation": "portrait",
   "background_color": "#0b0d12",
   "theme_color": "#0b0d12",
-  "icons": [{ "src": "/remote/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [
+    { "src": "/remote/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/remote/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/remote/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/remote/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }

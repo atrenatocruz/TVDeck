@@ -31,6 +31,8 @@ export interface WsHandle {
 export interface WsOptions {
   /** Base URL phones should use, e.g. http://192.168.1.20:7420 (evaluated per pairing request). */
   publicBase: () => string;
+  /** host[:port] of the public URL (for the Origin check behind a reverse proxy). */
+  publicHost?: () => string | null;
   limiter?: AuthRateLimiter;
 }
 
@@ -50,7 +52,12 @@ export function attachWebSocket(
   httpServer.on("upgrade", (req, socket: Duplex, head) => {
     const pathname = new URL(req.url ?? "/", "http://x").pathname;
     if (pathname !== "/ws") return; // leave Vite HMR etc. alone
-    if (!isOriginAllowed(req.headers.origin, req.headers.host)) {
+    const originOk = isOriginAllowed(req.headers.origin, req.headers.host, {
+      publicHost: opts.publicHost?.(),
+      forwardedHost: req.headers["x-forwarded-host"],
+      remoteAddress: req.socket.remoteAddress,
+    });
+    if (!originOk) {
       log.warn("ws", `refused upgrade, bad origin (${req.headers.origin ?? "none"})`);
       socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\nContent-Length: 0\r\n\r\n");
       socket.destroy();
@@ -155,6 +162,10 @@ export function attachWebSocket(
         const { code, expiresAt } = ctx.pairing.start();
         log.info("ws", "pairing code issued");
         return void send(ws, { type: "pairingCode", url: `${opts.publicBase()}/remote/#pair=${code}`, expiresAt });
+      }
+      if (role === "launcher" && msg.type === "pairingCancel") {
+        if (ctx.pairing.cancel()) log.info("ws", "pairing code cancelled");
+        return;
       }
       if (role === "launcher" && msg.type === "deviceRevoke") {
         if (ctx.devices.revoke(msg.deviceId)) {

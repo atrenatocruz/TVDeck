@@ -43,6 +43,13 @@ export class Pairing {
     return true;
   }
 
+  /** Invalidates the outstanding code (the QR overlay was closed). Returns whether there was one. */
+  cancel(): boolean {
+    const had = this.hasActive();
+    this.active = null;
+    return had;
+  }
+
   /** True when an unexpired code is outstanding. */
   hasActive(): boolean {
     return !!this.active && this.now() < this.active.expiresAt;

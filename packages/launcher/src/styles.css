@@ -280,7 +280,7 @@ code {
   margin-bottom: calc(34 * var(--u));
 }
 .row-title {
-  margin: 0 0 calc(4 * var(--u)) var(--pad-x);
+  margin: 0 0 calc(16 * var(--u)) var(--pad-x);
   font-size: calc(34 * var(--u));
   line-height: calc(42 * var(--u));
   font-weight: 620;
