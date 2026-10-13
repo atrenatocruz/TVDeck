@@ -1,0 +1,22 @@
+{
+  "name": "@tvdeck/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts --production",
+    "spike:input": "tsx src/spikes/input.ts",
+    "spike:home": "tsx src/spikes/home.ts"
+  },
+  "dependencies": {
+    "@tvdeck/protocol": "*",
+    "koffi": "^3.3.3",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1",
+    "vite": "^8.3.0",
+    "@preact/preset-vite": "^2.10.0"
+  }
+}

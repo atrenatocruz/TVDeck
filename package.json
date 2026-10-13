@@ -1,0 +1,22 @@
+{
+  "name": "tvdeck",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w @tvdeck/server",
+    "build": "npm run build -w @tvdeck/remote",
+    "start": "npm run start -w @tvdeck/server",
+    "test": "vitest run",
+    "typecheck": "tsc -p packages/protocol && tsc -p packages/server && tsc -p packages/remote",
+    "spike:input": "npm run spike:input -w @tvdeck/server",
+    "spike:home": "npm run spike:home -w @tvdeck/server"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.4"
+  },
+  "engines": { "node": ">=22" }
+}

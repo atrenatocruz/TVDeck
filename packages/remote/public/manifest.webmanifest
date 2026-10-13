@@ -1,0 +1,12 @@
+{
+  "name": "TVDeck Remote",
+  "short_name": "TVDeck",
+  "description": "Phone remote for your TVDeck PC",
+  "start_url": "/remote/",
+  "scope": "/remote/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
+  "icons": [{ "src": "/remote/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
