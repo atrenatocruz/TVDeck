@@ -51,6 +51,8 @@ export interface WebArgsOpts {
   url: string;
   /** Already resolved (see resolveUserAgent). */
   userAgent?: string;
+  /** Arrow keys move focus between links and buttons on pages that don't handle them (D-pad mode). */
+  spatialNav?: boolean;
 }
 
 /** Arguments for a web tile: its own fullscreen app window in a persistent apps profile. */
@@ -58,6 +60,7 @@ export function buildWebArgs(o: WebArgsOpts): string[] {
   return [
     `--user-data-dir=${webProfileDir(o.dataDir, o.userAgent)}`,
     ...(o.userAgent ? [`--user-agent=${o.userAgent}`] : []),
+    ...(o.spatialNav ? ["--enable-spatial-navigation"] : []),
     `--app=${o.url}`,
     "--start-fullscreen",
     "--no-first-run",

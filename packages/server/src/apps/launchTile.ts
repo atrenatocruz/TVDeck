@@ -32,7 +32,17 @@ export function resolveTarget(
   switch (tile.type) {
     case "web": {
       if (!o.edge) throw new Error("Microsoft Edge was not found on this PC");
-      return { command: o.edge, args: buildWebArgs({ dataDir: o.dataDir, url: tile.url!, userAgent: resolveUserAgent(tile.userAgent) }) };
+      return {
+        command: o.edge,
+        args: buildWebArgs({
+          dataDir: o.dataDir,
+          url: tile.url!,
+          userAgent: resolveUserAgent(tile.userAgent),
+          // TV interfaces drive focus themselves; desktop sites get Edge's D-pad mode. Edge reads the flag when
+          // a profile's browser starts, so it is the same for every tile sharing that profile.
+          spatialNav: !tile.userAgent && process.env.TVDECK_SPATIAL_NAV !== "0",
+        }),
+      };
     }
     case "exe": {
       const p = expandEnv(tile.path!);

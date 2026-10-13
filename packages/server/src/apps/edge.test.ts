@@ -41,3 +41,10 @@ describe("buildWebArgs with a user agent", () => {
     expect(resolveUserAgent(undefined)).toBeUndefined();
   });
 });
+
+describe("buildWebArgs D-pad mode", () => {
+  it("adds Edge's spatial navigation only when asked", () => {
+    expect(buildWebArgs({ dataDir: "C:\D", url: "https://x", spatialNav: true })).toContain("--enable-spatial-navigation");
+    expect(buildWebArgs({ dataDir: "C:\D", url: "https://x" })).not.toContain("--enable-spatial-navigation");
+  });
+});
