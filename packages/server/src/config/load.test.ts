@@ -54,3 +54,13 @@ describe("expandEnv", () => {
     expect(expandEnv("%NOPE%\\x", {})).toBe("%NOPE%\\x");
   });
 });
+
+describe("remote block", () => {
+  const base = { rows: [] };
+  it("is optional and validated", () => {
+    expect(parseTilesConfig(JSON.stringify(base)).ok).toBe(true);
+    expect(parseTilesConfig(JSON.stringify({ ...base, remote: { buttons: { prime: { open: "prime" }, apps: "home" } } })).ok).toBe(true);
+    const bad = parseTilesConfig(JSON.stringify({ ...base, remote: { buttons: { apps: "launch" } } }));
+    expect(bad.ok).toBe(false);
+  });
+});

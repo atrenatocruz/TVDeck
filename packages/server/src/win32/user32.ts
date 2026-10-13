@@ -43,7 +43,15 @@ export interface Native {
   /** Top-level (root) window under a screen point, or 0. */
   RootWindowFromPoint(x: number, y: number): number;
   IsCloaked(hwnd: number): boolean;
+  /** RegisterHotKey(NULL, id, mods, vk): the hotkey is delivered to this thread's queue. */
+  RegisterHotKey(id: number, mods: number, vk: number): boolean;
+  UnregisterHotKey(id: number): boolean;
+  /** Removes one WM_HOTKEY from this thread's queue and returns its id, or null when none is waiting. */
+  PeekHotkey(): number | null;
 }
+
+export const MOD_NOREPEAT = 0x4000;
+export const WM_HOTKEY = 0x0312;
 
 export const WM_CLOSE = 0x0010;
 export const SW_MINIMIZE = 6;
@@ -81,6 +89,9 @@ function makeStub(): Native {
     SetCursorPos: () => false,
     RootWindowFromPoint: () => 0,
     IsCloaked: () => false,
+    RegisterHotKey: () => false,
+    UnregisterHotKey: () => false,
+    PeekHotkey: () => null,
   };
 }
 
@@ -103,6 +114,10 @@ function makeNative(): Native {
   koffi.struct("POINT", { x: "int32", y: "int32" });
   koffi.struct("RECT", { left: "int32", top: "int32", right: "int32", bottom: "int32" });
   const dwmapi = koffi.load("dwmapi.dll");
+
+  koffi.struct("MSG", {
+    hwnd: "intptr_t", message: "uint32", wParam: "uintptr_t", lParam: "intptr_t", time: "uint32", ptx: "int32", pty: "int32",
+  });
 
   const EnumProc = koffi.proto("bool __stdcall EnumWindowsProc(intptr_t hwnd, intptr_t lparam)");
 
@@ -130,6 +145,9 @@ function makeNative(): Native {
     GetCursorPos: user32.func("bool __stdcall GetCursorPos(_Out_ POINT *p)"),
     SetCursorPos: user32.func("bool __stdcall SetCursorPos(int x, int y)"),
     WindowFromPoint: user32.func("intptr_t __stdcall WindowFromPoint(POINT p)"),
+    RegisterHotKey: user32.func("bool __stdcall RegisterHotKey(intptr_t hwnd, int id, uint32 mods, uint32 vk)"),
+    UnregisterHotKey: user32.func("bool __stdcall UnregisterHotKey(intptr_t hwnd, int id)"),
+    PeekMessageW: user32.func("bool __stdcall PeekMessageW(_Out_ MSG *msg, intptr_t hwnd, uint32 min, uint32 max, uint32 remove)"),
     GetCurrentThreadId: kernel32.func("uint32 __stdcall GetCurrentThreadId()"),
     OpenProcess: kernel32.func("intptr_t __stdcall OpenProcess(uint32 access, bool inherit, uint32 pid)"),
     CloseHandle: kernel32.func("bool __stdcall CloseHandle(intptr_t h)"),
@@ -202,6 +220,13 @@ function makeNative(): Native {
     IsCloaked: (h) => {
       const v = [0];
       return f.DwmGetWindowAttribute(h, 14, v, 4) === 0 && (v[0] ?? 0) !== 0; // DWMWA_CLOAKED
+    },
+    RegisterHotKey: (id, mods, vk) => f.RegisterHotKey(0, id, mods, vk),
+    UnregisterHotKey: (id) => f.UnregisterHotKey(0, id),
+    PeekHotkey: () => {
+      const m = { hwnd: 0, message: 0, wParam: 0, lParam: 0, time: 0, ptx: 0, pty: 0 };
+      // PM_REMOVE = 1; the range filter leaves every other message alone.
+      return f.PeekMessageW(m, 0, WM_HOTKEY, WM_HOTKEY, 1) ? Number(m.wParam) : null;
     },
     ProcessImagePath: (pid) => {
       const h = Number(f.OpenProcess(0x1000, false, pid)); // PROCESS_QUERY_LIMITED_INFORMATION

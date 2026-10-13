@@ -8,6 +8,7 @@ import { ensureLauncher, registerLauncher, startLauncherWatchdog } from "./apps/
 import { createAppService } from "./apps/service.ts";
 import { ensureTilesFile } from "./config/load.ts";
 import { watchTiles } from "./config/watch.ts";
+import { startRemoteSupport } from "./remote/index.ts";
 import { createHttp } from "./http.ts";
 import { lanAddresses, publicBase, publicHost, setDetectedBase } from "./lan.ts";
 import { enableFileLog, log } from "./log.ts";
@@ -82,6 +83,11 @@ async function main() {
   let stopWatchdog = () => {};
   registerLauncher(port, launcherKey);
   apps.start();
+  const remoteSupport = startRemoteSupport(
+    () => tiles.current().config,
+    () => tiles.current().config.rows.flatMap((r) => r.tiles),
+    apps,
+  );
   if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
   else {
     void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
@@ -91,6 +97,7 @@ async function main() {
   const shutdown = async () => {
     log.info("main", "shutting down");
     stopWatchdog();
+    remoteSupport.stop();
     apps.stop();
     ws.close();
     tiles.close();

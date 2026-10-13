@@ -104,6 +104,30 @@ Everything the server prints is also written to `%LOCALAPPDATA%\TVDeck\logs\tvde
 
 `npm run spike:input`, `spike:home` and `spike:m4` are manual checks that open and close their own windows (a throwaway Edge page that records key and mouse events, a stand-in launcher for Home against Notepad, fullscreen Edge and Steam Big Picture). Each prints PASS, FAIL or SKIP per step and never injects input unless its target window is in front. Do not touch the keyboard or mouse while one runs. `TVDECK_DRY_INPUT=1` prints every input as `[dry-input] ...` instead of sending it.
 
+## Xiaomi Bluetooth remote
+
+A paired Xiaomi Mi Box S remote (XMRM-006) works as a second remote next to the phone. Every button runs the same code path as the matching phone button.
+
+**Pair it:** unplug the Mi Box, press Win+R, run `DevicePairingWizard`, hold Back and Home together for about 10 seconds until the remote shows up as "Xiaomi RC", and pair it.
+
+| Button | Action |
+| --- | --- |
+| Up, Down, Left, Right | Arrow keys. Hold to repeat (after 400 ms, every 90 ms). |
+| OK | Enter |
+| Back | Per-tile back: Esc, or Alt+Left for tiles with `"backKey": "browserBack"` |
+| Home | Brings the launcher forward (apps keep running) |
+| Apps (grid) | Home by default |
+| Netflix, Prime Video | Open the tile with id `netflix` / `prime` by default |
+| Assistant | Nothing by default |
+| Volume +/- | Windows handles these itself; TVDeck leaves them alone |
+| Power | Not mapped |
+
+Remap Apps, Assistant, Netflix and Prime Video with the `remote` block in `tiles.json` ([CONFIG.md](CONFIG.md#xiaomi-remote)).
+
+**How it works:** the arrows, OK and the colour buttons only exist as raw HID reports on the remote's Consumer Control interface, which TVDeck reads with `node-hid` (shared access, Windows keeps using the device). Home and Back reach Windows as the Browser Home and Browser Back keys, so TVDeck registers them as global hotkeys so that neither Windows nor Edge acts on them. **This also captures Browser Home/Back keys from regular keyboards while TVDeck runs.** Set `TVDECK_CAPTURE_BROWSER_KEYS=0` to turn that off (the remote's Home and Back buttons then do whatever Windows does). If another program already owns those keys, TVDeck logs a warning and carries on.
+
+The remote sleeps when idle and reconnects on the next press; TVDeck looks for it every 3 seconds and logs only the connect and disconnect. `npm run remote:probe` prints decoded buttons and raw bytes for 60 seconds and injects nothing, which is how to map a new button (unknown bits are also written to the log at debug level). `TVDECK_DRY_INPUT=1` logs the remote's actions instead of performing them.
+
 ## Phone remote notes
 
 - Three tabs: Remote (D-pad, OK, Back, Home, media, volume), Touchpad (drag to move, tap to click, two-finger tap to right-click, two-finger drag to scroll) and Apps.

@@ -58,7 +58,11 @@ export function enableFileLog(file: string): void {
 
 const emit = (level: string, scope: string, msg: string) => sink?.write(`${stamp()} ${level} [${scope}] ${msg}`);
 
+const debugConsole = () => process.env.TVDECK_DEBUG === "1";
+
 export const log = {
+  /** Always goes to the log file; also to the console with TVDECK_DEBUG=1. */
+  debug: (scope: string, msg: string) => (debugConsole() && console.log(`${ts()} [${scope}] DEBUG ${msg}`), emit("DEBUG", scope, msg)),
   info: (scope: string, msg: string) => (console.log(`${ts()} [${scope}] ${msg}`), emit("INFO ", scope, msg)),
   warn: (scope: string, msg: string) => (console.warn(`${ts()} [${scope}] WARN ${msg}`), emit("WARN ", scope, msg)),
   error: (scope: string, msg: string) => (console.error(`${ts()} [${scope}] ERROR ${msg}`), emit("ERROR", scope, msg)),

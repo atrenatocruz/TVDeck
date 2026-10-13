@@ -14,6 +14,19 @@ const MEDIA: Record<"playPause" | "next" | "prev" | "stop", KeyName> = {
 };
 const VOLUME: Record<"up" | "down" | "mute", KeyName> = { up: "volumeUp", down: "volumeDown", mute: "mute" };
 
+/** Remote "Back": the foreground tile's backKey chord (Esc by default). Shared by the phone and the Xiaomi remote. */
+export function pressBack(apps?: AppService): void {
+  const keys = apps?.backKeys() ?? ["esc"];
+  log.info("input", `back -> ${keys.join("+")}`);
+  chord(keys);
+}
+
+/** Remote "Home": bring the launcher forward, leave every app running. */
+export function pressHome(apps?: AppService): void {
+  apps?.noteHome();
+  void goHome((m) => log.info("foreground", m)).then(() => apps?.refresh());
+}
+
 /** Executes an authenticated, validated input message. Launcher-only types are filtered upstream. */
 export function dispatch(
   msg: ClientMsg,
@@ -34,15 +47,8 @@ export function dispatch(
       break;
     case "button":
       if (msg.name === "ok") tapKey("enter");
-      else if (msg.name === "back") {
-        const keys = apps?.backKeys() ?? ["esc"];
-        log.info("input", `back -> ${keys.join("+")}`);
-        chord(keys);
-      }
-      else {
-        apps?.noteHome();
-        void goHome((m) => log.info("foreground", m)).then(() => apps?.refresh());
-      }
+      else if (msg.name === "back") pressBack(apps);
+      else pressHome(apps);
       break;
     case "media":
       tapKey(MEDIA[msg.action]);

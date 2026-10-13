@@ -31,8 +31,36 @@ export const Row = z.object({
   tiles: z.array(Tile),
 });
 
+/** What a physical remote button does: bring the launcher, send Back, nothing, or open a tile. */
+export const RemoteAction = z.union([
+  z.enum(["home", "back", "none"]),
+  z.object({ open: z.string().min(1) }).strict(),
+]);
+
+/** Optional settings for the paired Xiaomi Bluetooth remote (see docs/CONFIG.md). */
+export const RemoteConfig = z
+  .object({
+    buttons: z
+      .object({
+        netflix: RemoteAction.optional(),
+        prime: RemoteAction.optional(),
+        apps: RemoteAction.optional(),
+        assistant: RemoteAction.optional(),
+      })
+      .strict()
+      .optional(),
+    hid: z
+      .object({
+        vendorId: z.number().int().min(0).max(0xffff).optional(),
+        productId: z.number().int().min(0).max(0xffff).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
 export const TilesConfig = z
-  .object({ rows: z.array(Row) })
+  .object({ rows: z.array(Row), remote: RemoteConfig.optional() })
   .superRefine((cfg, ctx) => {
     const seen = new Set<string>();
     for (const row of cfg.rows)
@@ -45,3 +73,5 @@ export const TilesConfig = z
 export type Tile = z.infer<typeof Tile>;
 export type Row = z.infer<typeof Row>;
 export type TilesConfig = z.infer<typeof TilesConfig>;
+export type RemoteAction = z.infer<typeof RemoteAction>;
+export type RemoteConfig = z.infer<typeof RemoteConfig>;

@@ -7,6 +7,7 @@ Turn a Windows 11 PC that is connected to a TV into a TV box. A fullscreen launc
 - **Launcher:** a 10-foot fullscreen UI in Edge app mode, with tiles from `config/tiles.json` (hot reloaded) and focus navigation by phone or keyboard.
 - **Apps:** web tiles (Netflix, YouTube, ...) in their own persistent Edge profile, desktop apps, folders and `steam://` links. Home always brings the launcher back; apps keep running.
 - **Phone remote (PWA):** D-pad, OK, Back, Home, media and volume, a touchpad with gestures, text entry, an Apps tab. Installable, keeps the screen awake, and shows a calm offline screen when the PC is unreachable.
+- **Xiaomi Bluetooth remote:** a paired Mi Box S remote drives the launcher and apps too (D-pad with hold-to-repeat, OK, Back, Home, Netflix/Prime buttons). See [docs/SETUP.md](docs/SETUP.md#xiaomi-bluetooth-remote).
 - **Pairing:** scan a QR code on the TV once. Each phone gets its own revocable token; remove phones from the TV or with `npm run devices`.
 - **Anywhere access:** optional HTTPS through Tailscale, so the remote also works away from home. See [docs/TAILSCALE.md](docs/TAILSCALE.md).
 - **Runs by itself:** a Task Scheduler entry starts the server hidden at logon, logs to a rotating file, and relaunches the launcher if it ever disappears.
