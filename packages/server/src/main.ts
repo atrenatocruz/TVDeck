@@ -2,15 +2,19 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadOrCreateToken, newLauncherKey } from "./auth/sharedToken.ts";
+import { loadOrCreateSecrets } from "./auth/sharedToken.ts";
+import { ensureLauncher, registerLauncher } from "./apps/launcher.ts";
+import { ensureTilesFile } from "./config/load.ts";
+import { watchTiles } from "./config/watch.ts";
 import { createHttp } from "./http.ts";
 import { log } from "./log.ts";
-import { dataDir } from "./paths.ts";
+import { dataDir, TILES_EXAMPLE, TILES_FILE } from "./paths.ts";
 import { attachWebSocket } from "./ws.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const version = (JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"), "utf8")) as { version: string }).version;
 const production = process.argv.includes("--production") || process.env.NODE_ENV === "production";
+const noLauncher = process.argv.includes("--no-launcher") || process.env.TVDECK_NO_LAUNCHER === "1";
 const port = Number(process.env.TVDECK_PORT ?? 7420);
 
 const IGNORED_ADAPTERS = /vEthernet|WSL|VirtualBox|VMware|Loopback|Hyper-V|Docker|Bluetooth/i;
@@ -32,10 +36,13 @@ export function lanAddresses(): { lan: string[]; tailscale: string[] } {
 }
 
 async function main() {
-  const token = loadOrCreateToken();
-  const launcherKey = newLauncherKey();
+  const { token, launcherKey } = loadOrCreateSecrets();
+  if (ensureTilesFile(TILES_FILE, TILES_EXAMPLE)) log.info("config", `created ${TILES_FILE} from the example`);
+  let broadcast: (s: import("./config/watch.ts").TilesState) => void = () => {};
+  const tiles = watchTiles(TILES_FILE, (s) => broadcast(s));
   const { server, close } = await createHttp({ production, version });
-  const ws = attachWebSocket(server, { sharedToken: token, launcherKey }, version);
+  const ws = attachWebSocket(server, { sharedToken: token, launcherKey }, version, tiles.current);
+  broadcast = ws.broadcastTiles;
 
   server.on("error", (e: NodeJS.ErrnoException) => {
     log.error("http", e.code === "EADDRINUSE" ? `port ${port} is already in use (set TVDECK_PORT)` : e.message);
@@ -60,9 +67,14 @@ async function main() {
   console.log(`${bar}\n`);
   log.info("http", `listening on 0.0.0.0:${port}`);
 
+  registerLauncher(port, launcherKey);
+  if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
+  else void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
+
   const shutdown = async () => {
     log.info("main", "shutting down");
     ws.close();
+    tiles.close();
     await close();
     process.exit(0);
   };

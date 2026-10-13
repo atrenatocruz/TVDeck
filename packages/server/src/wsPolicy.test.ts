@@ -28,6 +28,12 @@ describe("decideAuth", () => {
     expect(decideAuth(hello("launcher", { kind: "launcher", key: ctx.launcherKey }), ctx)).toEqual({ ok: true, role: "launcher" });
     expect(decideAuth(hello("remote", { kind: "launcher", key: ctx.launcherKey }), ctx).ok).toBe(false);
   });
+  it("never lets launcher-kind auth or the launcher role cross over", () => {
+    expect(decideAuth(hello("launcher", { kind: "launcher", key: "wrong" }), ctx).ok).toBe(false);
+    expect(decideAuth(hello("launcher", { kind: "shared", token: ctx.launcherKey }), ctx).ok).toBe(false);
+    expect(decideAuth(hello("remote", { kind: "launcher", key: ctx.launcherKey }), ctx).ok).toBe(false);
+    expect(decideAuth(hello("remote", { kind: "shared", token: ctx.launcherKey }), ctx).ok).toBe(false);
+  });
   it("rejects wrong tokens and not-yet-supported kinds", () => {
     expect(decideAuth(hello("remote", { kind: "shared", token: "nope" }), ctx).ok).toBe(false);
     expect(decideAuth(hello("remote", { kind: "device", token: "x" }), ctx).ok).toBe(false);

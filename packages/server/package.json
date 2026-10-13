@@ -7,7 +7,8 @@
     "dev": "tsx watch src/main.ts",
     "start": "tsx src/main.ts --production",
     "spike:input": "tsx src/spikes/input.ts",
-    "spike:home": "tsx src/spikes/home.ts"
+    "spike:home": "tsx src/spikes/home.ts",
+    "dev:headless": "tsx watch src/main.ts --no-launcher"
   },
   "dependencies": {
     "@tvdeck/protocol": "*",

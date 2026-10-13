@@ -1,4 +1,4 @@
-import type { ClientMsg } from "@tvdeck/protocol";
+import type { ClientMsg, ServerMsg } from "@tvdeck/protocol";
 import { log } from "./log.ts";
 import { goHome } from "./win32/foreground.ts";
 import { chord, mouseClick, mouseMove, mouseScroll, tapKey, typeText } from "./win32/input.ts";
@@ -13,7 +13,7 @@ const MEDIA: Record<"playPause" | "next" | "prev" | "stop", KeyName> = {
 const VOLUME: Record<"up" | "down" | "mute", KeyName> = { up: "volumeUp", down: "volumeDown", mute: "mute" };
 
 /** Executes an authenticated, validated input message. Launcher-only types are filtered upstream. */
-export function dispatch(msg: ClientMsg): void {
+export function dispatch(msg: ClientMsg, reply: (m: ServerMsg) => void = () => {}): void {
   switch (msg.type) {
     case "nav":
       tapKey(msg.dir);
@@ -21,7 +21,7 @@ export function dispatch(msg: ClientMsg): void {
     case "button":
       if (msg.name === "ok") tapKey("enter");
       else if (msg.name === "back") chord(backChord("esc"));
-      else void goHome();
+      else void goHome((m) => log.info("foreground", m));
       break;
     case "media":
       tapKey(MEDIA[msg.action]);
@@ -45,7 +45,8 @@ export function dispatch(msg: ClientMsg): void {
       tapKey(msg.key);
       break;
     case "openApp":
-      log.info("dispatch", `openApp "${msg.tileId}" not implemented until M3`);
+      log.info("dispatch", `openApp "${msg.tileId}": launching arrives in M3`);
+      reply({ type: "error", code: "launch_failed", message: "App launching arrives in M3" });
       break;
     case "pairingStart":
     case "deviceRevoke":

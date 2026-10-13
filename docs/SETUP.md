@@ -1,4 +1,4 @@
-# TVDeck setup (Milestone 1)
+# TVDeck setup (Milestone 2)
 
 Requirements: Windows 11 (x64), Node 22+, npm 10+, Microsoft Edge. The PC and phone must be on the same network.
 
@@ -9,7 +9,17 @@ npm install
 npm run dev
 ```
 
-`npm run dev` starts one process on port 7420 (override with `TVDECK_PORT`). It serves the phone remote with Vite hot reload and accepts WebSocket connections on `/ws`.
+`npm run dev` starts one process on port 7420 (override with `TVDECK_PORT`). It serves the phone remote and the TV launcher with Vite hot reload and accepts WebSocket connections on `/ws`.
+
+## The launcher
+
+On start the server opens the launcher: Microsoft Edge in app mode, fullscreen, with its own profile in `%LOCALAPPDATA%\TVDeck\edge-launcher`. The window is titled exactly `TVDeck`; if one already exists it is reused. Its access key is stored next to the phone token in `secret.json`, so a server restart does not orphan an open launcher.
+
+- Skip auto-launch with `npm run dev:headless` or `npm start -- --no-launcher` (or `TVDECK_NO_LAUNCHER=1`). You can then open `http://localhost:7420/launcher/#k=<launcherKey from secret.json>` in any browser while developing.
+- Move with the arrow keys (or the phone D-pad), OK/Enter to open, Esc to jump back to the first tile. Mouse hover and click work too.
+- Phone Home raises the launcher. If its window was closed, the server finds it again or relaunches it.
+- Tiles come from `config/tiles.json`, hot-reloaded. See [CONFIG.md](CONFIG.md).
+- Opening apps arrives in Milestone 3; for now OK shows a message.
 
 The console prints a banner like:
 
@@ -30,7 +40,7 @@ npm run build
 npm start
 ```
 
-`npm start` serves the built remote from `packages/remote/dist`.
+`npm start` serves the built remote and launcher from `packages/remote/dist` and `packages/launcher/dist`.
 
 ## Checks
 
@@ -71,5 +81,4 @@ Steps: `alt+setForeground` (synthetic Alt, then SetForegroundWindow), `attachThr
 - **UIPI:** a normal process cannot send input to elevated windows (Task Manager, installers, apps run as administrator). `SendInput` reports fewer events than requested and the server logs a warning. Run TVDeck elevated to reach them (planned as an option for the autostart task).
 - **Secure desktop:** UAC prompts and the lock screen are never reachable, by design.
 - **Exclusive-fullscreen games** may ignore focus changes.
-- Home currently logs "launcher not running yet" because the launcher arrives in Milestone 2.
 - Voice and virtual keyboards on the phone are not supported yet. Text entry comes in Milestone 4.

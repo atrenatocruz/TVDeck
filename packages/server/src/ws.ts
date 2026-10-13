@@ -3,6 +3,7 @@ import type { Duplex } from "node:stream";
 import { CloseCode, LAUNCHER_ONLY, parseClientMsg, type ServerMsg } from "@tvdeck/protocol";
 import { WebSocket, WebSocketServer } from "ws";
 import { dispatch } from "./dispatch.ts";
+import type { TilesState } from "./config/watch.ts";
 import { log } from "./log.ts";
 import { decideAuth, isOriginAllowed, type AuthContext } from "./wsPolicy.ts";
 
@@ -12,7 +13,18 @@ const MAX_PAYLOAD = 16 * 1024;
 
 type Live = WebSocket & { isAlive?: boolean };
 
-export function attachWebSocket(httpServer: HttpServer, ctx: AuthContext, serverVersion: string): { close(): void } {
+export interface WsHandle {
+  close(): void;
+  /** Sends the tiles config to every authenticated socket (launcher and remotes). */
+  broadcastTiles(state: TilesState): void;
+}
+
+export function attachWebSocket(
+  httpServer: HttpServer,
+  ctx: AuthContext,
+  serverVersion: string,
+  getTiles: () => TilesState,
+): WsHandle {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_PAYLOAD });
 
   httpServer.on("upgrade", (req, socket: Duplex, head) => {
@@ -30,6 +42,9 @@ export function attachWebSocket(httpServer: HttpServer, ctx: AuthContext, server
   const send = (ws: WebSocket, msg: ServerMsg) => {
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
   };
+
+  const tilesMsg = (s: TilesState): ServerMsg => ({ type: "tiles", config: s.config, ...(s.error ? { error: s.error } : {}) });
+  const authed = new WeakSet<WebSocket>();
 
   wss.on("connection", (ws: Live, req) => {
     const peer = req.socket.remoteAddress ?? "?";
@@ -59,7 +74,9 @@ export function attachWebSocket(httpServer: HttpServer, ctx: AuthContext, server
         role = d.role;
         clearTimeout(helloTimer);
         log.info("ws", `${peer} connected as ${role}`);
+        authed.add(ws);
         send(ws, { type: "welcome", serverVersion });
+        send(ws, tilesMsg(getTiles()));
         return;
       }
 
@@ -70,7 +87,7 @@ export function attachWebSocket(httpServer: HttpServer, ctx: AuthContext, server
         return void send(ws, { type: "error", code: "forbidden", message: `${msg.type} is launcher-only` });
       }
       try {
-        dispatch(msg);
+        dispatch(msg, (m) => send(ws, m));
       } catch (e) {
         log.error("ws", `dispatch ${msg.type} failed: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -95,6 +112,10 @@ export function attachWebSocket(httpServer: HttpServer, ctx: AuthContext, server
   }, HEARTBEAT_MS);
 
   return {
+    broadcastTiles(state) {
+      const m = JSON.stringify(tilesMsg(state));
+      for (const c of wss.clients) if (authed.has(c) && c.readyState === WebSocket.OPEN) c.send(m);
+    },
     close() {
       clearInterval(beat);
       for (const ws of wss.clients) ws.terminate();

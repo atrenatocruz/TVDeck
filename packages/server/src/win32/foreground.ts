@@ -64,11 +64,28 @@ export const setLauncherWindow = (h: number | null): void => {
   launcherHwnd = h;
 };
 
-/** "Home": raise the launcher, leave every app running. */
+type Resolver = (step: (m: string) => void) => Promise<number | null>;
+let resolver: Resolver | null = null;
+/** Registered by apps/launcher.ts: re-finds the launcher window, or relaunches it. */
+export const setLauncherResolver = (r: Resolver): void => {
+  resolver = r;
+};
+
+/** "Home": raise the launcher, leave every app running. Re-finds or relaunches it when needed. */
 export async function goHome(log: (m: string) => void = console.log): Promise<FocusResult | null> {
   if (launcherHwnd === null || !native.IsWindow(launcherHwnd)) {
-    log("home: launcher not running yet (M2)");
-    return null;
+    launcherHwnd = null;
+    if (!resolver) {
+      log("home: launcher not running (and no launcher configured)");
+      return null;
+    }
+    launcherHwnd = await resolver((m) => log(`home: ${m}`));
+    if (launcherHwnd === null) {
+      log("home: launcher could not be found or started");
+      return null;
+    }
+  } else {
+    log("home: using remembered launcher window");
   }
   const r = await bringToFront(launcherHwnd);
   log(r.ok ? `home: launcher in front via ${r.step}` : "home: could not raise launcher");

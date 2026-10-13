@@ -1,5 +1,7 @@
 node_modules/
 dist/
 config/tiles.json
+config/icons/*
+!config/icons/.gitkeep
 *.log
 .env

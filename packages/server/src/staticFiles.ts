@@ -13,6 +13,10 @@ const MIME: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".ico": "image/x-icon",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".avif": "image/avif",
+  ".gif": "image/gif",
   ".woff2": "font/woff2",
   ".woff": "font/woff",
   ".txt": "text/plain; charset=utf-8",
@@ -65,7 +69,7 @@ export function serveStatic(root: string, mountPath: string, req: IncomingMessag
     file = path.join(root, "index.html"); // SPA fallback
     stat = safeStat(file);
     if (!stat?.isFile()) {
-      res.writeHead(404).end("remote not built: run `npm run build`");
+      res.writeHead(404).end("not built: run `npm run build`");
       return true;
     }
   }
