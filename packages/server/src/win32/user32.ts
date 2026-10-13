@@ -38,6 +38,10 @@ export interface Native {
   GetRootOwner(hwnd: number): number;
   GetExStyle(hwnd: number): number;
   GetWindowSize(hwnd: number): { w: number; h: number };
+  GetWindowRect(hwnd: number): { left: number; top: number; right: number; bottom: number };
+  SetCursorPos(x: number, y: number): boolean;
+  /** Top-level (root) window under a screen point, or 0. */
+  RootWindowFromPoint(x: number, y: number): number;
   IsCloaked(hwnd: number): boolean;
 }
 
@@ -73,6 +77,9 @@ function makeStub(): Native {
     GetRootOwner: () => 0,
     GetExStyle: () => 0,
     GetWindowSize: () => ({ w: 0, h: 0 }),
+    GetWindowRect: () => ({ left: 0, top: 0, right: 0, bottom: 0 }),
+    SetCursorPos: () => false,
+    RootWindowFromPoint: () => 0,
     IsCloaked: () => false,
   };
 }
@@ -121,6 +128,8 @@ function makeNative(): Native {
     GetWindowRect: user32.func("bool __stdcall GetWindowRect(intptr_t hwnd, _Out_ RECT *r)"),
     DwmGetWindowAttribute: dwmapi.func("int32 __stdcall DwmGetWindowAttribute(intptr_t hwnd, uint32 attr, _Out_ uint32_t *val, uint32 size)"),
     GetCursorPos: user32.func("bool __stdcall GetCursorPos(_Out_ POINT *p)"),
+    SetCursorPos: user32.func("bool __stdcall SetCursorPos(int x, int y)"),
+    WindowFromPoint: user32.func("intptr_t __stdcall WindowFromPoint(POINT p)"),
     GetCurrentThreadId: kernel32.func("uint32 __stdcall GetCurrentThreadId()"),
     OpenProcess: kernel32.func("intptr_t __stdcall OpenProcess(uint32 access, bool inherit, uint32 pid)"),
     CloseHandle: kernel32.func("bool __stdcall CloseHandle(intptr_t h)"),
@@ -179,6 +188,16 @@ function makeNative(): Native {
       const r = { left: 0, top: 0, right: 0, bottom: 0 };
       f.GetWindowRect(h, r);
       return { w: r.right - r.left, h: r.bottom - r.top };
+    },
+    GetWindowRect: (h) => {
+      const r = { left: 0, top: 0, right: 0, bottom: 0 };
+      f.GetWindowRect(h, r);
+      return r;
+    },
+    SetCursorPos: (x, y) => f.SetCursorPos(x, y),
+    RootWindowFromPoint: (x, y) => {
+      const w = Number(f.WindowFromPoint({ x, y }));
+      return w ? Number(f.GetAncestor(w, 2)) : 0; // GA_ROOT
     },
     IsCloaked: (h) => {
       const v = [0];

@@ -4,6 +4,7 @@ import { CloseCode, LAUNCHER_ONLY, parseClientMsg, type ServerMsg } from "@tvdec
 import { WebSocket, WebSocketServer } from "ws";
 import type { AppService, StateMsg } from "./apps/service.ts";
 import { dispatch } from "./dispatch.ts";
+import { InputGuard } from "./inputGuard.ts";
 import type { TilesState } from "./config/watch.ts";
 import { log } from "./log.ts";
 import { decideAuth, isOriginAllowed, type AuthContext } from "./wsPolicy.ts";
@@ -53,6 +54,7 @@ export function attachWebSocket(
   wss.on("connection", (ws: Live, req) => {
     const peer = req.socket.remoteAddress ?? "?";
     let role: "remote" | "launcher" | null = null;
+    const guard = new InputGuard();
     ws.isAlive = true;
     ws.on("pong", () => void (ws.isAlive = true));
 
@@ -92,7 +94,7 @@ export function attachWebSocket(
         return void send(ws, { type: "error", code: "forbidden", message: `${msg.type} is launcher-only` });
       }
       try {
-        dispatch(msg, (m) => send(ws, m), apps);
+        dispatch(msg, (m) => send(ws, m), apps, guard);
       } catch (e) {
         log.error("ws", `dispatch ${msg.type} failed: ${e instanceof Error ? e.message : String(e)}`);
       }

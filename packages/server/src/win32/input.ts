@@ -71,12 +71,15 @@ export function buildClick(button: "left" | "right", double = false): InputRecor
   return double ? [...pair, ...pair] : pair;
 }
 
-/** Speed-dependent gain: slow = precise (1x), fast flicks up to MAX_GAIN. */
-const ACCEL_K = 0.05;
-const MAX_GAIN = 4;
+/**
+ * Pointer acceleration curve. `speed` is the per-message movement magnitude in phone px (about one
+ * animation frame of finger travel). Slow drags stay precise (gain 1), fast flicks ramp to `maxGain`.
+ * Tune here; the phone's slow/normal/fast sensitivity multiplies the input before this curve.
+ */
+export const ACCEL = { k: 0.05, maxGain: 4 } as const;
 export function accelerate(dx: number, dy: number): { dx: number; dy: number } {
   const speed = Math.hypot(dx, dy);
-  const gain = Math.min(1 + ACCEL_K * speed, MAX_GAIN);
+  const gain = Math.min(1 + ACCEL.k * speed, ACCEL.maxGain);
   return { dx: dx * gain, dy: dy * gain };
 }
 
@@ -107,8 +110,20 @@ export function buildScroll(wx: number, wy: number): InputRecord[] {
 
 const scanOf: ScanLookup = (vk) => native.MapVirtualKeyW(vk, 0);
 
+/** TVDECK_DRY_INPUT=1 logs events instead of injecting them (safe end-to-end tests of the phone UI). */
+const DRY = process.env.TVDECK_DRY_INPUT === "1";
+function describe(i: InputRecord): string {
+  if (i.u.mi) return `m${i.u.mi.dwFlags.toString(16)}(${i.u.mi.dx},${i.u.mi.dy},${i.u.mi.mouseData | 0})`;
+  const k = i.u.ki!;
+  return `k${k.wVk || "u" + k.wScan.toString(16)}${k.dwFlags & KEYEVENTF.KEYUP ? "^" : "v"}`;
+}
+
 function send(inputs: InputRecord[]): number {
   if (inputs.length === 0) return 0;
+  if (DRY) {
+    console.log(`[dry-input] ${inputs.map(describe).join(" ")}`);
+    return inputs.length;
+  }
   const sent = native.SendInput(inputs);
   if (sent !== inputs.length) {
     console.warn(`[input] SendInput injected ${sent}/${inputs.length} events (blocked by UIPI?)`);

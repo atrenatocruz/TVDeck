@@ -8,6 +8,7 @@
     "start": "tsx src/main.ts --production",
     "spike:input": "tsx src/spikes/input.ts",
     "spike:home": "tsx src/spikes/home.ts",
+    "spike:m4": "tsx src/spikes/m4.ts",
     "dev:headless": "tsx watch src/main.ts --no-launcher"
   },
   "dependencies": {

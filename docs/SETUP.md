@@ -1,4 +1,4 @@
-# TVDeck setup (Milestone 3)
+# TVDeck setup (Milestone 4)
 
 Requirements: Windows 11 (x64), Node 22+, npm 10+, Microsoft Edge. The PC and phone must be on the same network.
 
@@ -88,9 +88,41 @@ PASS  notepad  launcher raised via step: alt+setForeground
 
 Steps: `alt+setForeground` (synthetic Alt, then SetForegroundWindow), `attachThreadInput`, `minimizeForeground`. `FAIL` means all three failed. `SKIP` means the scenario could not be set up. Steam is left running if the spike started Big Picture.
 
+### `npm run spike:m4`
+
+Opens a throwaway Edge window whose page records mouse moves, clicks, double clicks, right clicks, wheel deltas and keys in its title. Before **every** injection the window must be in front (and for mouse steps, under the pointer), otherwise that step is skipped and nothing is injected. It then drives the same functions the phone uses: `mouseMove`, `mouseClick` (single, double, right), `mouseScroll` (both axes), `typeText` with an accent, a symbol and an emoji, and the Backspace, Enter, Space and Tab keys. Finally it presses volume up then down, mute twice and play/pause twice (all net zero, but the Windows volume overlay will flash and a playing track may blip). The cursor is restored afterwards. Do not touch the keyboard or mouse while it runs.
+
+## Touchpad, text and media (phone remote)
+
+The remote has three tabs: **Remote** (D-pad, OK, Back, Home, media and volume), **Touchpad** and **Apps**. The last tab is remembered.
+
+### Touchpad gestures
+
+| Gesture | Result |
+|---|---|
+| One finger drag | Move the pointer (relative, with a speed-dependent curve) |
+| Tap (under about 200 ms, under 8 px of travel) | Left click |
+| Two quick taps | Double click (two left clicks, Windows does the rest, so single taps have no delay) |
+| Two-finger tap | Right click |
+| Two-finger drag | Scroll, both axes, natural direction (the page follows your fingers) |
+
+Slow, Normal and Fast change how far the pointer travels per finger movement. Click-and-drag (hold, then drag) is not supported yet because the protocol only has whole clicks.
+
+### Text input
+
+Tap the field at the top of the Touchpad tab and type on the phone keyboard. Committed text is typed on the PC (accents and emoji work); while the keyboard is composing a word the text stays on the phone and is sent when the word is committed. Backspace, Space, Enter and Tab have their own buttons (Backspace repeats while held). Typing is limited to about 1500 characters per second.
+
+### Windows "Enhance pointer precision"
+
+Windows applies its own acceleration to injected relative moves when **Enhance pointer precision** is on (Settings, Bluetooth and devices, Mouse, Additional mouse settings, Pointer Options). TVDeck already applies a curve on the server (`ACCEL` in `packages/server/src/win32/input.ts`), so for a predictable feel turn Windows' option off. If the pointer is too fast or slow, change Slow/Normal/Fast on the phone first.
+
+### Safe testing without moving the pointer
+
+Start the server with `TVDECK_DRY_INPUT=1` and every input is printed as `[dry-input] ...` instead of being injected.
+
 ## Known limits
 
 - **UIPI:** a normal process cannot send input to elevated windows (Task Manager, installers, apps run as administrator). `SendInput` reports fewer events than requested and the server logs a warning. Run TVDeck elevated to reach them (planned as an option for the autostart task).
 - **Secure desktop:** UAC prompts and the lock screen are never reachable, by design.
 - **Exclusive-fullscreen games** may ignore focus changes.
-- Voice and virtual keyboards on the phone are not supported yet. Text entry comes in Milestone 4.
+- Voice input on the phone depends on the phone keyboard's own dictation, which commits text like normal typing.

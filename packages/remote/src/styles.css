@@ -152,22 +152,10 @@ button {
   }
 }
 
-/* ---------- stage ---------- */
-.stage {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: clamp(18px, 3.4dvh, 30px);
-  padding: 0 24px clamp(18px, 3dvh, 28px);
-}
-
 .notice {
   position: absolute;
-  top: clamp(8px, 4dvh, 40px);
+  z-index: 5;
+  top: 76px;
   left: 24px;
   right: 24px;
   display: grid;
@@ -196,7 +184,7 @@ button {
 /* ---------- d-pad ---------- */
 .dpad {
   position: relative;
-  width: min(86vw, 350px, 47dvh);
+  width: min(78vw, 330px, 38dvh);
   aspect-ratio: 1;
   flex: none;
   transition: opacity 300ms var(--ease-out), filter 300ms var(--ease-out);
@@ -304,135 +292,15 @@ button {
   outline-offset: 3px;
 }
 
-/* ---------- back / home ---------- */
-.actions {
-  display: flex;
-  gap: 14px;
-  width: min(86vw, 350px);
-  flex: none;
-}
-.pillbtn {
-  flex: 1;
-  height: 58px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  border-radius: var(--r-pill);
-  background: var(--surface-2);
-  border: 1px solid var(--hairline);
-  font-size: 15.5px;
-  font-weight: 580;
-  color: var(--text-1);
-  transition:
-    transform var(--dur-release) var(--spring),
-    background var(--dur-ui) var(--ease-out),
-    border-color var(--dur-ui) var(--ease-out);
-}
-.pillbtn:active {
-  transform: scale(0.95);
-  background: var(--surface-4);
-  border-color: var(--hairline-strong);
-  transition-duration: var(--dur-press), 60ms, 60ms;
-  transition-timing-function: var(--ease-out);
-}
-.pillbtn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-.pillbtn-icon svg {
-  width: 22px;
-  height: 22px;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* ---------- tab bar ---------- */
-.tabs {
-  position: relative;
-  flex: none;
-  display: flex;
-  gap: 4px;
-  margin: 0 12px calc(10px + env(safe-area-inset-bottom));
-  padding: 6px;
-  border-radius: var(--r-lg);
-  background: rgb(24 28 38 / 0.72);
-  border: 1px solid var(--hairline);
-  backdrop-filter: blur(22px) saturate(170%);
-  -webkit-backdrop-filter: blur(22px) saturate(170%);
-}
-.tab {
-  position: relative;
-  flex: 1;
-  display: grid;
-  justify-items: center;
-  gap: 3px;
-  min-height: 66px;
-  align-content: center;
-  padding: 8px 0;
-  border-radius: 22px;
-  font-size: 11.5px;
-  font-weight: 560;
-  color: var(--text-3);
-  transition: background var(--dur-ui) var(--ease-out), color var(--dur-ui) var(--ease-out);
-}
-.tab svg {
-  width: 23px;
-  height: 23px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.tab[aria-current="page"] {
-  color: var(--text-1);
-  background: var(--surface-3);
-}
-.tab[aria-current="page"] svg {
-  stroke: var(--accent);
-}
-.tab[aria-disabled="true"] {
-  cursor: default;
-}
-.tab[aria-disabled="true"] svg,
-.tab[aria-disabled="true"] span {
-  opacity: 0.55;
-}
-.soon {
-  font-style: normal;
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--accent);
-  opacity: 0.8;
-  margin-top: -1px;
-}
-
-@media (max-height: 640px) {
-  .dpad {
-    width: min(70vw, 300px, 42dvh);
-  }
-  .pillbtn {
-    height: 50px;
-  }
-}
-
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-motion: reduce) {
   .wedge,
-  .ok,
-  .pillbtn {
+  .ok {
     transition-duration: 120ms !important;
     transition-timing-function: ease-out !important;
   }
   .wedge[data-pressed="true"],
-  .ok[data-pressed="true"],
-  .pillbtn:active {
+  .ok[data-pressed="true"] {
     transform: none;
   }
   .dot {
@@ -444,7 +312,9 @@ button {
 }
 @media (prefers-reduced-transparency: reduce) {
   .pill,
-  .tabs {
+  .tabs,
+  .typebox,
+  .speed {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: var(--surface-2);
@@ -456,36 +326,6 @@ button {
     --text-2: #d0d3df;
     --text-3: #a4a9ba;
   }
-}
-
-/* ---------- wordmark ---------- */
-.brand {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
-  color: var(--text-3);
-  font-size: 13.5px;
-  font-weight: 500;
-  animation: rise 700ms var(--ease-out) 120ms both;
-}
-.brand-mark {
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
-  display: block;
-  box-shadow: 0 10px 34px rgb(120 105 255 / 0.28), 0 0 0 1px var(--hairline);
-}
-.brand-name {
-  font-size: 22px;
-  font-weight: 640;
-  letter-spacing: -0.02em;
-  color: var(--text-1);
-}
-@media (max-height: 640px) {
-  .brand { display: none; }
 }
 
 /* ---------- front app + launch toast ---------- */

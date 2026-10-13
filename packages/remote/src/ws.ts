@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import type { ClientMsg, CloseCode, ServerMsg } from "@tvdeck/protocol";
+import type { ClientMsg, CloseCode, ServerMsg, TilesConfig } from "@tvdeck/protocol";
 
 export type ConnStatus = "connecting" | "connected" | "reconnecting" | "unpaired";
 
@@ -10,6 +10,10 @@ export const status = signal<ConnStatus>("connecting");
 export const pcName = signal<string | null>(null);
 /** Title of the app in front on the TV, or null when it is the launcher or something else. */
 export const frontApp = signal<string | null>(null);
+/** Launcher tiles, tileIds with a live window, and the tile in front (for the Apps tab). */
+export const tiles = signal<TilesConfig | null>(null);
+export const running = signal<ReadonlySet<string>>(new Set());
+export const frontTileId = signal<string | null>(null);
 export interface Toast {
   id: number;
   text: string;
@@ -97,9 +101,12 @@ function connect(): void {
       status.value = "connected";
     } else if (msg.type === "tiles") {
       titles = new Map(msg.config.rows.flatMap((r) => r.tiles.map((t) => [t.id, t.title] as const)));
+      tiles.value = msg.config;
       syncFront();
     } else if (msg.type === "state") {
       frontId = msg.foreground === "app" && msg.tileId ? msg.tileId : null;
+      frontTileId.value = frontId;
+      running.value = new Set(msg.running ?? []);
       syncFront();
     } else if (msg.type === "error") {
       if (msg.code === "unauthorized") markUnpaired();
@@ -110,6 +117,8 @@ function connect(): void {
     if (socket === ws) {
       socket = null;
       frontId = null;
+      frontTileId.value = null;
+      running.value = new Set();
       syncFront();
     }
     if (ev.code === UNAUTHORIZED) return markUnpaired();
