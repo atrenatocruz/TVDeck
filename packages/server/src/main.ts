@@ -1,13 +1,15 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Devices, watchDevices } from "./auth/devices.ts";
+import { Pairing } from "./auth/pairing.ts";
 import { loadOrCreateSecrets } from "./auth/sharedToken.ts";
 import { ensureLauncher, registerLauncher } from "./apps/launcher.ts";
 import { createAppService } from "./apps/service.ts";
 import { ensureTilesFile } from "./config/load.ts";
 import { watchTiles } from "./config/watch.ts";
 import { createHttp } from "./http.ts";
+import { lanAddresses, publicBase } from "./lan.ts";
 import { log } from "./log.ts";
 import { dataDir, TILES_EXAMPLE, TILES_FILE } from "./paths.ts";
 import { attachWebSocket } from "./ws.ts";
@@ -17,24 +19,6 @@ const version = (JSON.parse(fs.readFileSync(path.join(here, "..", "package.json"
 const production = process.argv.includes("--production") || process.env.NODE_ENV === "production";
 const noLauncher = process.argv.includes("--no-launcher") || process.env.TVDECK_NO_LAUNCHER === "1";
 const port = Number(process.env.TVDECK_PORT ?? 7420);
-
-const IGNORED_ADAPTERS = /vEthernet|WSL|VirtualBox|VMware|Loopback|Hyper-V|Docker|Bluetooth/i;
-
-export function lanAddresses(): { lan: string[]; tailscale: string[] } {
-  const lan: string[] = [];
-  const tailscale: string[] = [];
-  for (const [name, addrs] of Object.entries(os.networkInterfaces())) {
-    if (IGNORED_ADAPTERS.test(name)) continue;
-    for (const a of addrs ?? []) {
-      if (a.family !== "IPv4" || a.internal) continue;
-      const [o1, o2] = a.address.split(".").map(Number);
-      const isCgnat = o1 === 100 && (o2 ?? 0) >= 64 && (o2 ?? 0) <= 127;
-      if (isCgnat || /tailscale/i.test(name)) tailscale.push(a.address);
-      else if (!a.address.startsWith("169.254.")) lan.push(a.address);
-    }
-  }
-  return { lan, tailscale };
-}
 
 async function main() {
   const { token, launcherKey } = loadOrCreateSecrets();
@@ -47,7 +31,13 @@ async function main() {
     () => tiles.current().config.rows.flatMap((r) => r.tiles),
     (s) => broadcastState(s),
   );
-  const ws = attachWebSocket(server, { sharedToken: token, launcherKey }, version, tiles.current, apps);
+  const allowShared = process.env.TVDECK_ALLOW_SHARED_TOKEN === "1";
+  if (allowShared) log.warn("auth", "TVDECK_ALLOW_SHARED_TOKEN=1: the shared token is accepted. Prefer pairing; unset this when done.");
+  const devices = new Devices(path.join(dataDir(), "devices.json"));
+  const ctx = { sharedToken: token, launcherKey, allowShared, devices, pairing: new Pairing() };
+  const ws = attachWebSocket(server, ctx, version, tiles.current, apps, { publicBase: () => publicBase(port) });
+  // The CLI (npm run devices) edits devices.json directly: pick that up and cut revoked sockets.
+  const devWatch = watchDevices(devices, (ids) => ws.closeDevices(ids), () => ws.broadcastDevices());
   broadcast = ws.broadcastTiles;
   broadcastState = ws.broadcastState;
 
@@ -59,17 +49,13 @@ async function main() {
   await new Promise<void>((resolve) => server.listen(port, "0.0.0.0", resolve));
 
   const { lan, tailscale } = lanAddresses();
-  const url = (ip: string) => `http://${ip}:${port}/remote/#t=${token}`;
   const bar = "-".repeat(64);
   console.log(`\n${bar}\n  TVDeck ${version}  (${production ? "production" : "dev"})  data: ${dataDir()}\n${bar}`);
-  console.log("  Open this on your phone (same Wi-Fi) to pair the remote:\n");
-  if (lan.length === 0) console.log("    (no LAN adapter found; use http://localhost:" + port + "/remote/#t=... on this PC)");
-  for (const ip of lan) console.log(`    ${url(ip)}`);
-  if (tailscale.length) {
-    console.log("\n  Tailscale:");
-    for (const ip of tailscale) console.log(`    ${url(ip)}`);
-  }
-  console.log(`\n  This PC: http://localhost:${port}/remote/#t=${token}`);
+  console.log("  Pair a phone: open the launcher (it shows a QR code).\n");
+  console.log(`  Phone address: ${publicBase(port)}`);
+  if (lan.length > 1) console.log(`  Other adapters: ${lan.slice(1).map((ip) => `http://${ip}:${port}`).join("  ")}`);
+  if (tailscale.length) console.log(`  Tailscale: ${tailscale.map((ip) => `http://${ip}:${port}`).join("  ")}`);
+  if (devices.listInfo().length === 0) console.log("\n  No phones are paired yet.");
   console.log("\n  First run: Windows Firewall may ask to allow Node.js - choose Private networks.");
   console.log(`${bar}\n`);
   log.info("http", `listening on 0.0.0.0:${port}`);
@@ -84,6 +70,7 @@ async function main() {
     apps.stop();
     ws.close();
     tiles.close();
+    devWatch.close();
     await close();
     process.exit(0);
   };

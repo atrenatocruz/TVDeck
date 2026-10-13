@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import type { TilesConfig } from "@tvdeck/protocol";
+import type { DeviceInfo, TilesConfig } from "@tvdeck/protocol";
 
 export type LinkStatus = "connecting" | "connected" | "reconnecting" | "unauthorized";
 
@@ -42,4 +42,21 @@ export function pushToast(text: string, tone: Toast["tone"] = "info", ms = 3800)
 }
 export function dismissToast(id: number): void {
   toasts.value = toasts.value.filter((t) => t.id !== id);
+}
+
+// ---- pairing and devices ----
+/** Pseudo focus id for the "Phones" button in the top bar. */
+export const PHONES_ID = "@phones";
+export type Overlay = { kind: "pair" } | { kind: "devices" } | { kind: "confirm"; device: DeviceInfo };
+export const overlay = signal<Overlay | null>(null);
+/** null until the first `devices` message. */
+export const devices = signal<DeviceInfo[] | null>(null);
+export const pairing = signal<{ url: string; expiresAt: number } | null>(null);
+/** Name of the phone that just paired, while the pair overlay shows its confirmation. */
+export const justPaired = signal<string | null>(null);
+
+export function closeOverlay(): void {
+  overlay.value = null;
+  pairing.value = null;
+  justPaired.value = null;
 }

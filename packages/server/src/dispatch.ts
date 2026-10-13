@@ -85,8 +85,7 @@ export function dispatch(
       break;
     case "pairingStart":
     case "deviceRevoke":
-      log.info("dispatch", `${msg.type} not implemented until M5`);
-      break;
+      break; // handled by the socket layer (needs the pairing/device stores)
     case "hello":
     case "ping":
       break; // handled by the socket layer

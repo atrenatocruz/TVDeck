@@ -1,6 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { greeting } from "../tileInfo.ts";
-import { status } from "../store.ts";
+import { devices, focusId, overlay, PHONES_ID, status } from "../store.ts";
 
 function useNow(): Date {
   const [now, setNow] = useState(() => new Date());
@@ -47,6 +47,21 @@ export function TopBar() {
             {s !== "connected" ? <span class="link-text">{LINK_TEXT[s]}</span> : null}
           </span>
         </div>
+        <button
+          class="phones"
+          type="button"
+          tabIndex={-1}
+          data-focused={focusId.value === PHONES_ID ? "" : undefined}
+          onMouseEnter={() => (focusId.value = PHONES_ID)}
+          onClick={() => (overlay.value = { kind: "devices" })}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="phones-glyph">
+            <rect x="6.5" y="2.5" width="11" height="19" rx="3" fill="none" stroke="currentColor" stroke-width="1.7" />
+            <path d="M10.5 18.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg>
+          Phones
+          {devices.value ? <span class="phones-count">{devices.value.length}</span> : null}
+        </button>
         <h1 class="greeting">{greeting(now)}</h1>
       </div>
       <div class="top-right">

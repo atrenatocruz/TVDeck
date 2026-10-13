@@ -2,10 +2,11 @@ import type { Tile as TileData } from "@tvdeck/protocol";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Tile } from "./components/Tile.tsx";
 import { Toasts } from "./components/Toasts.tsx";
+import { Overlays } from "./components/Overlays.tsx";
 import { TopBar } from "./components/TopBar.tsx";
 import { navigate, scrollIntoRow, type Dir, type FocusRect, type RowMemory } from "./nav/spatial.ts";
 import { Spring } from "./spring.ts";
-import { beginOpening, config, configError, focusId, opening, pushToast, running, status, toasts } from "./store.ts";
+import { beginOpening, config, configError, focusId, opening, overlay, PHONES_ID, pushToast, running, status, toasts } from "./store.ts";
 import { accentOf } from "./tileInfo.ts";
 import { send } from "./ws.ts";
 
@@ -132,7 +133,7 @@ export function App() {
       return;
     }
     const cur = allTiles.find((x) => x.t.id === focusId.value);
-    if (!cur) {
+    if (!cur && focusId.value !== PHONES_ID) {
       const fallback = (focusId.value && [...memory.values()].find((m) => allTiles.some((x) => x.t.id === m))) || allTiles[0]!.t.id;
       setFocus(fallback);
     }
@@ -169,19 +170,29 @@ export function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (overlay.value) return; // overlays handle their own keys
       const dir = KEY_DIR[e.key];
+      const onPhones = focusId.value === PHONES_ID;
       if (dir) {
         e.preventDefault();
+        if (onPhones) {
+          if (dir === "down" && allTiles.length) focusId.value = memory.get(0) ?? allTiles[0]!.t.id;
+          return;
+        }
         const next = navigate(readRects(), focusId.value, dir, memory);
         if (next) setFocus(next);
+        else if (dir === "up" && focused?.ri === 0) focusId.value = PHONES_ID;
         return;
       }
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        if (!e.repeat && focusId.value) open(focusId.value);
+        if (e.repeat) return;
+        if (onPhones) overlay.value = { kind: "devices" };
+        else if (focusId.value) open(focusId.value);
       } else if (e.key === "Escape") {
         e.preventDefault();
         if (toasts.value.length) toasts.value = [];
+        else if (onPhones && allTiles[0]) setFocus(allTiles[0].t.id);
         else if (allTiles[0] && focusId.value !== allTiles[0].t.id) setFocus(allTiles[0].t.id);
       }
     };
@@ -194,7 +205,7 @@ export function App() {
   let introStep = 0;
 
   return (
-    <div class="app" data-intro={intro && cfg ? "" : undefined}>
+    <div class="app" data-overlay={overlay.value ? "" : undefined} data-intro={intro && cfg ? "" : undefined}>
       <div class="ambient" aria-hidden="true">
         <i class="aurora a1" />
         <i class="aurora a2" />
@@ -233,6 +244,7 @@ export function App() {
       {cfg && rows.length === 0 ? <Empty /> : null}
       {!cfg && s === "unauthorized" ? <Blocked /> : null}
       <Banner />
+      <Overlays />
       <Toasts />
     </div>
   );

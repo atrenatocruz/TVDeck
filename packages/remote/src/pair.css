@@ -1,0 +1,76 @@
+/* ---------- not paired ---------- */
+.unpaired {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 96px 32px 64px;
+  text-align: center;
+  animation: rise 520ms var(--ease-out) both;
+}
+.scan {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  border-radius: 36px;
+  background: radial-gradient(closest-side, rgb(167 155 255 / 0.16), transparent);
+}
+.scan svg {
+  width: 96px;
+  height: 96px;
+}
+.scan-line {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 30px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 14px var(--accent-glow);
+  animation: sweep 2.8s ease-in-out infinite;
+}
+@keyframes sweep {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(70px);
+  }
+}
+.unpaired-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: var(--text-1);
+}
+.unpaired-body {
+  margin: 0;
+  max-width: 19em;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .unpaired,
+  .scan-line {
+    animation: none;
+  }
+  .scan-line {
+    display: none;
+  }
+}

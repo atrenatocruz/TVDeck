@@ -3,6 +3,7 @@ import "@fontsource-variable/bricolage-grotesque";
 import { render } from "preact";
 import { App } from "./App.tsx";
 import "./styles.css";
+import "./overlays.css";
 import { startConnection } from "./ws.ts";
 
 startConnection();

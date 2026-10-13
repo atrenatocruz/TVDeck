@@ -1,12 +1,16 @@
 import { signal } from "@preact/signals";
 import type { ClientMsg, CloseCode, ServerMsg, TilesConfig } from "@tvdeck/protocol";
+import { clearDeviceToken, clearLegacyToken, defaultDeviceName, loadDeviceToken, loadLegacyToken, saveDeviceToken, saveLegacyToken } from "./credentials.ts";
 
 export type ConnStatus = "connecting" | "connected" | "reconnecting" | "unpaired";
+/** Why the "Not paired" screen is showing. */
+export type UnpairedReason = "none" | "expired" | "removed";
 
 const UNAUTHORIZED: typeof CloseCode.unauthorized = 4001;
-const TOKEN_KEY = "tvdeck.token";
+const REVOKED: typeof CloseCode.revoked = 4004;
 
 export const status = signal<ConnStatus>("connecting");
+export const unpairedReason = signal<UnpairedReason>("none");
 export const pcName = signal<string | null>(null);
 /** Title of the app in front on the TV, or null when it is the launcher or something else. */
 export const frontApp = signal<string | null>(null);
@@ -31,30 +35,18 @@ function showToast(text: string): void {
 }
 const syncFront = () => (frontApp.value = frontId ? (titles.get(frontId) ?? null) : null);
 
-function readToken(): string | null {
-  try {
-    const m = /(?:^#|&)t=([^&]+)/.exec(location.hash);
-    if (m?.[1]) {
-      const t = decodeURIComponent(m[1]);
-      try {
-        localStorage.setItem(TOKEN_KEY, t);
-      } catch {
-        /* storage unavailable: keep for this session only */
-        sessionToken = t;
-      }
-      history.replaceState(null, "", location.pathname + location.search);
-      return t;
-    }
-  } catch {
-    /* ignore */
-  }
-  try {
-    return localStorage.getItem(TOKEN_KEY) ?? sessionToken;
-  } catch {
-    return sessionToken;
-  }
+type Cred = { kind: "device"; token: string } | { kind: "shared"; token: string } | { kind: "pair"; code: string };
+
+/** Pulls #pair= / #t= out of the URL fragment and removes it from the address bar. */
+function takeHash(): { pair: string | null; shared: string | null } {
+  const grab = (k: string) => {
+    const m = new RegExp(`(?:^#|&)${k}=([^&]+)`).exec(location.hash);
+    return m?.[1] ? decodeURIComponent(m[1]) : null;
+  };
+  const out = { pair: grab("pair"), shared: grab("t") };
+  if (out.pair || out.shared) history.replaceState(null, "", location.pathname + location.search);
+  return out;
 }
-let sessionToken: string | null = null;
 
 let socket: WebSocket | null = null;
 let attempt = 0;
@@ -62,7 +54,7 @@ let retryTimer: number | undefined;
 let pingTimer: number | undefined;
 let lastRx = 0;
 let stopped = false;
-let token: string | null = null;
+let cred: Cred | null = null;
 
 function scheduleReconnect(): void {
   if (stopped) return;
@@ -74,7 +66,7 @@ function scheduleReconnect(): void {
 }
 
 function connect(): void {
-  if (stopped || !token) return;
+  if (stopped || !cred) return;
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
   clearTimeout(retryTimer);
   if (status.value !== "reconnecting") status.value = "connecting";
@@ -84,7 +76,10 @@ function connect(): void {
   socket = ws;
 
   ws.onopen = () => {
-    const hello: ClientMsg = { type: "hello", v: 1, role: "remote", auth: { kind: "shared", token: token! } };
+    const c = cred!;
+    const auth: Extract<ClientMsg, { type: "hello" }>["auth"] =
+      c.kind === "pair" ? { kind: "pair", code: c.code, deviceName: defaultDeviceName() } : c.kind === "device" ? { kind: "device", token: c.token } : { kind: "shared", token: c.token };
+    const hello: ClientMsg = { type: "hello", v: 1, role: "remote", auth };
     ws.send(JSON.stringify(hello));
     lastRx = Date.now();
   };
@@ -96,8 +91,16 @@ function connect(): void {
     } catch {
       return;
     }
-    if (msg.type === "welcome") {
+    if (msg.type === "paired") {
+      // The token is shown to us exactly once. Keep it and use it from now on.
+      cred = { kind: "device", token: msg.deviceToken };
+      void saveDeviceToken(msg.deviceToken);
+      clearLegacyToken();
+    } else if (msg.type === "revoked") {
+      markUnpaired("removed");
+    } else if (msg.type === "welcome") {
       attempt = 0;
+      unpairedReason.value = "none";
       status.value = "connected";
     } else if (msg.type === "tiles") {
       titles = new Map(msg.config.rows.flatMap((r) => r.tiles.map((t) => [t.id, t.title] as const)));
@@ -109,7 +112,7 @@ function connect(): void {
       running.value = new Set(msg.running ?? []);
       syncFront();
     } else if (msg.type === "error") {
-      if (msg.code === "unauthorized") markUnpaired();
+      if (msg.code === "unauthorized") markUnpaired(cred?.kind === "pair" ? "expired" : "removed");
       else if (msg.code === "launch_failed") showToast(msg.message);
     }
   };
@@ -121,7 +124,9 @@ function connect(): void {
       running.value = new Set();
       syncFront();
     }
-    if (ev.code === UNAUTHORIZED) return markUnpaired();
+    if (stopped) return;
+    if (ev.code === UNAUTHORIZED) return markUnpaired(cred?.kind === "pair" ? "expired" : "removed");
+    if (ev.code === REVOKED) return markUnpaired("removed");
     scheduleReconnect();
   };
   ws.onerror = () => {
@@ -129,15 +134,17 @@ function connect(): void {
   };
 }
 
-function markUnpaired(): void {
+/** Credentials were refused (or revoked): forget them and stop retrying. */
+function markUnpaired(reason: UnpairedReason): void {
+  if (status.value === "unpaired") return;
   stopped = true;
+  unpairedReason.value = reason;
   status.value = "unpaired";
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* ignore */
+  if (cred?.kind !== "pair") {
+    void clearDeviceToken();
+    clearLegacyToken();
   }
-  sessionToken = null;
+  cred = null;
   clearTimeout(retryTimer);
 }
 
@@ -154,14 +161,26 @@ function reconnectNow(): void {
   connect();
 }
 
-export function startConnection(): void {
-  token = readToken();
+export async function startConnection(): Promise<void> {
+  const hash = takeHash();
   void fetch("/healthz")
     .then((r) => r.json() as Promise<{ name?: string }>)
     .then((j) => void (pcName.value = j.name ?? null))
     .catch(() => {});
 
-  if (!token) {
+  const device = await loadDeviceToken();
+  if (hash.pair) cred = { kind: "pair", code: hash.pair };
+  else if (device) cred = { kind: "device", token: device };
+  else if (hash.shared) {
+    // Only works on servers started with TVDECK_ALLOW_SHARED_TOKEN=1.
+    saveLegacyToken(hash.shared);
+    cred = { kind: "shared", token: hash.shared };
+  } else {
+    const legacy = loadLegacyToken();
+    if (legacy) cred = { kind: "shared", token: legacy };
+  }
+
+  if (!cred) {
     status.value = "unpaired";
     stopped = true;
     return;

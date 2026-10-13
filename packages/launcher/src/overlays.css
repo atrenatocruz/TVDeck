@@ -1,0 +1,344 @@
+/* ---------- phones button (top bar) ---------- */
+.phones {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  margin-top: calc(22 * var(--u));
+  height: calc(52 * var(--u));
+  padding: 0 calc(10 * var(--u)) 0 calc(18 * var(--u));
+  border-radius: calc(26 * var(--u));
+  font-size: calc(22 * var(--u));
+  font-weight: 560;
+  color: var(--text-2);
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 calc(1.5 * var(--u)) var(--hairline);
+  transition:
+    transform 280ms var(--spring),
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+}
+.phones-glyph {
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+}
+.phones-count {
+  min-width: calc(34 * var(--u));
+  height: calc(34 * var(--u));
+  padding: 0 calc(10 * var(--u));
+  display: grid;
+  place-items: center;
+  border-radius: calc(17 * var(--u));
+  font-size: calc(19 * var(--u));
+  font-variant-numeric: tabular-nums;
+  background: rgb(255 255 255 / 0.1);
+}
+.phones[data-focused] {
+  color: #14112b;
+  background: var(--text-1);
+  box-shadow: 0 calc(10 * var(--u)) calc(40 * var(--u)) rgb(167 155 255 / 0.4);
+  transform: scale(1.06);
+  transform-origin: left center;
+}
+.phones[data-focused] .phones-count {
+  background: rgb(20 17 43 / 0.12);
+}
+.top-left .greeting {
+  margin-top: calc(18 * var(--u));
+}
+
+/* ---------- overlays ---------- */
+.app[data-overlay] .viewport,
+.app[data-overlay] .topbar {
+  filter: blur(calc(6 * var(--u))) saturate(0.8);
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(70% 70% at 50% 45%, rgb(10 12 17 / 0.74), rgb(10 12 17 / 0.92));
+  animation: scrim-in 260ms ease both;
+}
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+.ov {
+  width: calc(880 * var(--u));
+  max-height: calc(940 * var(--u));
+  display: flex;
+  flex-direction: column;
+  padding: calc(56 * var(--u)) calc(64 * var(--u));
+  border-radius: calc(44 * var(--u));
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-1));
+  box-shadow:
+    inset 0 0 0 calc(1.5 * var(--u)) var(--hairline-strong),
+    0 calc(50 * var(--u)) calc(140 * var(--u)) rgb(0 0 0 / 0.6);
+  animation: ov-in 420ms var(--spring) both;
+}
+.ov[data-wide] {
+  width: calc(1360 * var(--u));
+}
+@keyframes ov-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(24 * var(--u)), 0) scale(0.96);
+  }
+}
+.ov-title {
+  font-family: var(--display);
+  font-weight: 580;
+  font-size: calc(64 * var(--u));
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.ov-sub {
+  margin-top: calc(14 * var(--u));
+  font-size: calc(26 * var(--u));
+  line-height: 1.4;
+  color: var(--text-2);
+  max-width: 30em;
+}
+
+.btn {
+  height: calc(72 * var(--u));
+  padding: 0 calc(40 * var(--u));
+  border-radius: calc(36 * var(--u));
+  font-size: calc(26 * var(--u));
+  font-weight: 580;
+  color: var(--text-1);
+  background: rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 0 0 calc(1.5 * var(--u)) var(--hairline-strong);
+  transition:
+    transform 260ms var(--spring),
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.btn:focus {
+  color: #14112b;
+  background: var(--text-1);
+  box-shadow: 0 calc(10 * var(--u)) calc(40 * var(--u)) rgb(167 155 255 / 0.35);
+  transform: scale(1.05);
+}
+.btn-primary {
+  background: color-mix(in oklab, var(--accent) 30%, transparent);
+  box-shadow: inset 0 0 0 calc(1.5 * var(--u)) color-mix(in oklab, var(--accent) 60%, transparent);
+}
+.btn-danger:focus {
+  color: #2a0d0d;
+  background: var(--bad);
+  box-shadow: 0 calc(10 * var(--u)) calc(40 * var(--u)) rgb(240 154 154 / 0.35);
+}
+.btn-row {
+  display: flex;
+  gap: calc(20 * var(--u));
+  margin-top: calc(44 * var(--u));
+}
+
+/* pair */
+.pair {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: calc(72 * var(--u));
+  align-items: center;
+}
+.qr {
+  width: calc(560 * var(--u));
+  height: calc(560 * var(--u));
+  border-radius: calc(28 * var(--u));
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 0 0 calc(10 * var(--u)) rgb(255 255 255 / 0.06);
+}
+.qr-svg,
+.qr-svg svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.qr-wait {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(100deg, #f0f1f6 30%, #fff 50%, #f0f1f6 70%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.steps {
+  margin: calc(28 * var(--u)) 0 0;
+  padding-left: calc(34 * var(--u));
+  font-size: calc(30 * var(--u));
+  line-height: 1.5;
+  color: var(--text-1);
+}
+.steps li::marker {
+  color: var(--accent);
+  font-weight: 650;
+}
+.pair-url {
+  margin-top: calc(36 * var(--u));
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: calc(19 * var(--u));
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+.pair-time {
+  margin-top: calc(10 * var(--u));
+  font-size: calc(22 * var(--u));
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.pair-copy .btn {
+  margin-top: calc(36 * var(--u));
+}
+.paired {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: calc(60 * var(--u)) 0;
+}
+.paired .ov-sub {
+  margin-inline: auto;
+}
+.paired-mark {
+  width: calc(120 * var(--u));
+  height: calc(120 * var(--u));
+  margin-bottom: calc(28 * var(--u));
+  color: var(--ok);
+  animation: pop 520ms var(--spring) both;
+}
+@keyframes pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* devices */
+.ov-head {
+  flex: none;
+  margin-bottom: calc(32 * var(--u));
+}
+.dev-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(14 * var(--u));
+  overflow-y: auto;
+  margin: calc(-10 * var(--u));
+  padding: calc(10 * var(--u));
+  scrollbar-width: none;
+}
+.dev-add {
+  flex: none;
+  align-self: flex-start;
+  margin-bottom: calc(10 * var(--u));
+}
+.dev {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: calc(24 * var(--u));
+  padding: calc(22 * var(--u)) calc(28 * var(--u));
+  border-radius: calc(26 * var(--u));
+  text-align: left;
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 calc(1.5 * var(--u)) var(--hairline);
+  transition:
+    transform 260ms var(--spring),
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.dev:focus {
+  color: #14112b;
+  background: var(--text-1);
+  transform: scale(1.02);
+  box-shadow: 0 calc(10 * var(--u)) calc(40 * var(--u)) rgb(167 155 255 / 0.3);
+}
+.dev-icon {
+  display: grid;
+  place-items: center;
+  width: calc(64 * var(--u));
+  height: calc(64 * var(--u));
+  border-radius: calc(20 * var(--u));
+  background: rgb(255 255 255 / 0.08);
+}
+.dev:focus .dev-icon {
+  background: rgb(20 17 43 / 0.1);
+}
+.glyph {
+  width: calc(34 * var(--u));
+  height: calc(34 * var(--u));
+}
+.dev-main {
+  display: grid;
+  gap: calc(4 * var(--u));
+  min-width: 0;
+}
+.dev-name {
+  font-size: calc(32 * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dev-meta {
+  font-size: calc(21 * var(--u));
+  color: var(--text-3);
+}
+.dev:focus .dev-meta,
+.dev:focus .dev-seen {
+  color: #4a4d63;
+}
+.dev-seen {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  font-size: calc(22 * var(--u));
+  color: var(--text-2);
+}
+.dev-dot {
+  width: calc(10 * var(--u));
+  height: calc(10 * var(--u));
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.dev-seen[data-active] .dev-dot {
+  background: var(--ok);
+  box-shadow: 0 0 calc(10 * var(--u)) rgb(127 220 184 / 0.6);
+}
+.dev:focus .dev-dot {
+  background: #4a4d63;
+}
+.dev:focus .dev-seen[data-active] .dev-dot {
+  background: #1f9d73;
+}
+.ov-foot {
+  flex: none;
+  margin-top: calc(32 * var(--u));
+}
+.confirm {
+  max-width: calc(760 * var(--u));
+}
+/* the confirm dialog sits on top of the devices screen */
+.scrim:has(.confirm) {
+  background: rgb(10 12 17 / 0.7);
+  backdrop-filter: blur(calc(14 * var(--u)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .ov,
+  .paired-mark,
+  .qr-wait {
+    animation: none;
+  }
+}

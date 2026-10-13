@@ -14,6 +14,7 @@
     "spike:input": "npm run spike:input -w @tvdeck/server",
     "spike:home": "npm run spike:home -w @tvdeck/server",
     "spike:m4": "npm run spike:m4 -w @tvdeck/server",
+    "devices": "npm run devices -w @tvdeck/server --",
     "dev:headless": "npm run dev:headless -w @tvdeck/server"
   },
   "devDependencies": {

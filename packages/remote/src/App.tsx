@@ -1,3 +1,4 @@
+import { Unpaired } from "./components/Unpaired.tsx";
 import { tick } from "./haptics.ts";
 import { IconApps, IconRemote, IconTouchpad } from "./icons.tsx";
 import { setTab, TABS, tab, type Tab } from "./nav.ts";
@@ -39,16 +40,6 @@ function Toast() {
     <div class="toast" key={t.id} role="status" aria-live="polite">
       <i class="toast-dot" />
       <span>{t.text}</span>
-    </div>
-  );
-}
-
-function Notice() {
-  if (status.value !== "unpaired") return null;
-  return (
-    <div class="notice" role="alert">
-      <strong>Not paired</strong>
-      <span>Open the link shown on the PC to pair this phone.</span>
     </div>
   );
 }
@@ -113,11 +104,18 @@ function Panels() {
 }
 
 export function App() {
+  if (status.value === "unpaired") {
+    return (
+      <div class="shell">
+        <div class="aura" aria-hidden="true" />
+        <Unpaired />
+      </div>
+    );
+  }
   return (
     <div class="shell">
       <div class="aura" aria-hidden="true" />
       <StatusPill />
-      <Notice />
       <Panels />
       <Toast />
       <TabBar />

@@ -1,6 +1,6 @@
 import type { ClientMsg, ServerMsg } from "@tvdeck/protocol";
 import { batch } from "@preact/signals";
-import { config, configError, endOpening, frontState, opening, pushToast, running, status } from "./store.ts";
+import { config, configError, devices, endOpening, frontState, opening, overlay, pairing, pushToast, running, status } from "./store.ts";
 
 const UNAUTHORIZED = 4001;
 const KEY_KEY = "tvdeck.launcherKey";
@@ -64,6 +64,16 @@ function onMessage(msg: ServerMsg): void {
         else if (op && msg.foreground === "launcher" && Date.now() - op.since > 2500) endOpening();
       });
       break;
+    case "pairingCode":
+      pairing.value = { url: msg.url, expiresAt: msg.expiresAt };
+      break;
+    case "devices": {
+      const first = devices.value === null;
+      devices.value = msg.list;
+      // First run: nothing is paired, so go straight to the QR code.
+      if (first && msg.list.length === 0 && !overlay.value) overlay.value = { kind: "pair" };
+      break;
+    }
     case "error":
       if (msg.code === "launch_failed") endOpening();
       if (msg.code === "unauthorized") markUnauthorized();

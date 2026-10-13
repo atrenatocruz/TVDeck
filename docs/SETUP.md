@@ -1,4 +1,4 @@
-# TVDeck setup (Milestone 4)
+# TVDeck setup (Milestone 5)
 
 Requirements: Windows 11 (x64), Node 22+, npm 10+, Microsoft Edge. The PC and phone must be on the same network.
 
@@ -13,7 +13,7 @@ npm run dev
 
 ## The launcher
 
-On start the server opens the launcher: Microsoft Edge in app mode, fullscreen, with its own profile in `%LOCALAPPDATA%\TVDeck\edge-launcher`. The window is titled exactly `TVDeck`; if one already exists it is reused. Its access key is stored next to the phone token in `secret.json`, so a server restart does not orphan an open launcher.
+On start the server opens the launcher: Microsoft Edge in app mode, fullscreen, with its own profile in `%LOCALAPPDATA%\TVDeck\edge-launcher`. The window is titled exactly `TVDeck`; if one already exists it is reused. Its access key is stored in `secret.json`, so a server restart does not orphan an open launcher.
 
 - Skip auto-launch with `npm run dev:headless` or `npm start -- --no-launcher` (or `TVDECK_NO_LAUNCHER=1`). You can then open `http://localhost:7420/launcher/#k=<launcherKey from secret.json>` in any browser while developing.
 - Move with the arrow keys (or the phone D-pad), OK/Enter to open, Esc to jump back to the first tile. Mouse hover and click work too.
@@ -21,17 +21,42 @@ On start the server opens the launcher: Microsoft Edge in app mode, fullscreen, 
 - Tiles come from `config/tiles.json`, hot-reloaded. See [CONFIG.md](CONFIG.md).
 - OK on a tile opens the app (see [Apps](#apps)). The tile shows "Opening" until the app is in front, and a small dot marks apps that are still running behind the launcher.
 
-The console prints a banner like:
+## Pairing a phone
 
-```
-http://192.168.1.20:7420/remote/#t=<token>
-```
+1. Start TVDeck. The launcher shows a QR code by itself while no phone is paired. Later, choose **Phones** (press Up from the first row, then OK) and **Pair a new phone**.
+2. Scan the QR code with the phone camera and open the link. The phone connects and becomes the remote. The TV confirms with "Paired with <name>".
 
-Open that URL on your phone. The token lives in the URL fragment, so it is never sent in HTTP requests. The page stores it in `localStorage`, then removes it from the address bar. The token itself is saved in `%LOCALAPPDATA%\TVDeck\secret.json`.
+The code in the QR is single use, expires after 5 minutes and is replaced by a new one automatically. Starting a new pairing cancels the previous code. The link carries the code in the URL fragment (`#pair=...`), so it is never sent in an HTTP request; the page strips it from the address bar right away.
+
+The phone receives a device token once and keeps it in `localStorage` and IndexedDB. Only a SHA-256 hash of the token is stored on the PC, in `%LOCALAPPDATA%\TVDeck\devices.json`.
+
+The QR link uses `http://<first LAN IPv4>:<port>`. Set `TVDECK_PUBLIC_URL` (for example to your `tailscale serve` HTTPS address) to use a different base.
+
+### Removing a phone
+
+- On the TV: **Phones**, select the phone, OK, then **Remove** (Cancel is selected by default).
+- From a terminal: `npm run devices -- list` and `npm run devices -- revoke <id>`. A running server notices the change within a second.
+
+Either way the phone's open connection is closed immediately and its token stops working. The phone then shows "Not paired".
+
+### Upgrading from M1-M4
+
+The old shared token is off by default. Open the launcher and pair the phone once by scanning the QR code. If you must keep the old link for a while, start the server with `TVDECK_ALLOW_SHARED_TOKEN=1` (it logs a warning); the console no longer prints the token link.
 
 **Windows Firewall:** the first time, Windows may ask whether Node.js can accept connections. Allow it on Private networks. If the phone cannot connect, check that your Wi-Fi network is set to Private.
 
-If the phone shows "Not paired", open the URL from the console again.
+If the phone shows "Not paired" or "Code expired", show a new code on the TV and scan it again.
+
+## Security model
+
+- Everything on the network needs a credential: the launcher uses a random per-install key (in the launch URL fragment), phones use per-device 256-bit tokens, and pairing codes are 128-bit, single-use and short-lived.
+- Loopback is not trusted: behind `tailscale serve` all connections arrive from 127.0.0.1, so every connection authenticates.
+- WebSocket upgrades must carry an `Origin` that matches the `Host` (blocks cross-site hijacking).
+- Failed authentication is rate limited per remote address (10 failures in 5 minutes, then blocked for the rest of the window). Behind `tailscale serve` all clients share one address; that is acceptable because guessing 128/256-bit values is not feasible anyway.
+- Tokens are compared in constant time and stored hashed. `devices.json` and `secret.json` live in your Windows profile folder.
+- Limits: anyone who can see the QR code during its 5 minutes can pair, so pair on your own screen. The code stays valid until it expires or is used, even after the pairing window is closed. Input injected by a paired phone has the full power of your keyboard and mouse.
+
+**Windows Firewall:** the first time, Windows may ask whether Node.js can accept connections. Allow it on Private networks. If the phone cannot connect, check that your Wi-Fi network is set to Private.
 
 ## Apps
 
@@ -59,7 +84,7 @@ npm start
 ```
 npm run typecheck
 npm test
-node scripts/ws-check.mjs   # with the server running: auth/origin/hello checks over a real socket
+node scripts/ws-check.mjs   # needs a server started with TVDECK_ALLOW_SHARED_TOKEN=1 (it uses the shared token)
 ```
 
 `ws-check` never sends keypress messages, so it cannot press keys on the PC.

@@ -10,7 +10,7 @@ Turn a Windows 11 PC that is connected to a TV into a TV box. A fullscreen launc
 | M2 | Launcher with config-driven tiles and focus navigation | done |
 | M3 | App launching and Home | done |
 | M4 | Touchpad, text, media and volume | done |
-| M5 | Pairing and device revocation | planned |
+| M5 | Pairing and device revocation | done |
 | M6 | PWA over Tailscale, autostart | planned |
 
 ## Quick start
