@@ -3,7 +3,7 @@
  * Report layout (measured): [0x01, byte1, byte2, ...]; every button is one bit, release = all zero.
  */
 
-export type ButtonName = "ok" | "up" | "down" | "left" | "right" | "assistant" | "apps" | "netflix" | "prime";
+export type ButtonName = "ok" | "up" | "down" | "left" | "right" | "assistant" | "apps" | "netflix" | "prime" | "power";
 
 /** Bit masks per payload byte (index 1 = first byte after the report id). */
 const MAP: ReadonlyArray<readonly [byteIndex: number, mask: number, name: ButtonName]> = [
@@ -12,6 +12,7 @@ const MAP: ReadonlyArray<readonly [byteIndex: number, mask: number, name: Button
   [1, 0x04, "down"],
   [1, 0x08, "left"],
   [1, 0x10, "right"],
+  [1, 0x20, "power"],
   [1, 0x40, "assistant"],
   [2, 0x02, "apps"],
   [2, 0x04, "netflix"],

@@ -2,7 +2,7 @@ import type { RemoteAction, RemoteConfig } from "@tvdeck/protocol";
 import type { KeyName } from "../win32/keymap.ts";
 import type { ButtonName } from "./parseReport.ts";
 
-export type ConfigurableButton = "netflix" | "prime" | "apps" | "assistant";
+export type ConfigurableButton = "netflix" | "prime" | "apps" | "assistant" | "power";
 export type ResolvedButtons = Record<ConfigurableButton, RemoteAction>;
 
 export const DEFAULT_BUTTONS: ResolvedButtons = {
@@ -10,6 +10,7 @@ export const DEFAULT_BUTTONS: ResolvedButtons = {
   prime: { open: "prime" },
   apps: "home",
   assistant: "none",
+  power: "home",
 };
 
 export function resolveButtons(cfg?: RemoteConfig): ResolvedButtons {

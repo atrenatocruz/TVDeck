@@ -11,6 +11,7 @@ describe("parseReport", () => {
     expect([...p(1, 0x10, 0).buttons]).toEqual(["right"]);
     expect([...p(1, 0x01, 0).buttons]).toEqual(["ok"]);
     expect([...p(1, 0x40, 0).buttons]).toEqual(["assistant"]);
+    expect([...p(1, 0x20, 0).buttons]).toEqual(["power"]);
     expect([...p(1, 0, 0x02).buttons]).toEqual(["apps"]);
     expect([...p(1, 0, 0x04).buttons]).toEqual(["netflix"]);
     expect([...p(1, 0, 0x20).buttons]).toEqual(["prime"]);

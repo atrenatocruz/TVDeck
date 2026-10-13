@@ -135,7 +135,7 @@ A paired Xiaomi Mi Box S remote (XMRM-006) works as a second remote next to the 
 | Netflix, Prime Video | Open the tile with id `netflix` / `prime` by default |
 | Assistant | Nothing by default |
 | Volume +/- | Windows handles these itself; TVDeck leaves them alone |
-| Power | Not mapped |
+| Power | Brings the launcher forward (configurable as `power`; it does not sleep the PC). TVDeck must be running, so install the logon task with `npm run autostart:install` |
 
 Remap Apps, Assistant, Netflix and Prime Video with the `remote` block in `tiles.json` ([CONFIG.md](CONFIG.md#xiaomi-remote)).
 

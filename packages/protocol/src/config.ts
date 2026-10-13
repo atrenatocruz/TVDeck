@@ -46,6 +46,7 @@ export const RemoteConfig = z
         prime: RemoteAction.optional(),
         apps: RemoteAction.optional(),
         assistant: RemoteAction.optional(),
+        power: RemoteAction.optional(),
       })
       .strict()
       .optional(),
