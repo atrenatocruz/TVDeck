@@ -23,7 +23,7 @@ const LINK_TEXT = {
   unauthorized: "Not authorised",
 } as const;
 
-/** Quiet corner chrome: a small mark on the left; connection, settings and the time on the right. */
+/** Quiet corner chrome: connection, settings and the time, top right. */
 export function TopBar() {
   const now = useNow();
   const time = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit" }).format(now);
@@ -34,10 +34,6 @@ export function TopBar() {
 
   return (
     <header class="topbar" data-awake={focused ? "" : undefined}>
-      <svg class="brand-mark" viewBox="0 0 32 32" role="img" aria-label="TVDeck">
-        <rect x="2" y="9" width="28" height="19" rx="6" class="bm-back" />
-        <rect x="2" y="4" width="28" height="19" rx="6" class="bm-front" />
-      </svg>
       <div class="corner">
         <span class="link" data-status={s} role="status" aria-live="polite">
           <i class="link-dot" />
@@ -52,7 +48,6 @@ export function TopBar() {
           onPointerMove={(e) => (e.movementX || e.movementY) && focusId.value !== PHONES_ID && (focusId.value = PHONES_ID)}
           onClick={() => (overlay.value = { kind: "devices" })}
         >
-          <span class="gear-label">Phones{count ? ` \u00b7 ${count}` : ""}</span>
           <span class="gear-disc">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="3.6" stroke-dasharray="2.6 2.6" />
@@ -60,10 +55,10 @@ export function TopBar() {
               <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="2" />
             </svg>
           </span>
+          <span class="gear-label">Phones{count ? ` · ${count}` : ""}</span>
         </button>
         <div class="clock" title={date}>
           <span class="clock-time">{time}</span>
-          <span class="clock-date">{date}</span>
         </div>
       </div>
     </header>

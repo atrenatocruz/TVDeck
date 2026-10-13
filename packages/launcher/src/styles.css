@@ -215,24 +215,10 @@ code {
   left: 0;
   right: 0;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: calc(40 * var(--u)) calc(64 * var(--u)) 0;
   pointer-events: none;
-}
-.brand-mark {
-  width: calc(30 * var(--u));
-  height: calc(30 * var(--u));
-  opacity: 0.5;
-}
-.bm-back {
-  fill: rgb(255 255 255 / 0.3);
-}
-.bm-front {
-  fill: #fff;
-}
-.bm-dot {
-  fill: #101014;
 }
 .corner {
   display: flex;
@@ -280,51 +266,60 @@ code {
   opacity: 1;
 }
 
+/* Settings: a faint gear that becomes one white pill ("gear + Phones · n") when focused. */
 .gear {
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: calc(14 * var(--u));
-}
-.gear-label {
-  font-size: calc(24 * var(--u));
-  font-weight: 580;
-  letter-spacing: 0.005em;
-  color: var(--text-1);
-  opacity: 0;
-  transform: translate3d(calc(10 * var(--u)), 0, 0);
+  height: calc(52 * var(--u));
+  padding: 0 calc(4 * var(--u));
+  border-radius: 999px;
+  color: var(--text-2);
+  opacity: 0.7;
   transition:
+    background-color 260ms ease,
+    color 220ms ease,
     opacity 220ms ease,
-    transform 380ms var(--ease-out);
+    padding 420ms var(--ease-out),
+    transform 460ms var(--spring),
+    box-shadow 260ms ease;
 }
 .gear-disc {
   display: grid;
   place-items: center;
-  width: calc(52 * var(--u));
-  height: calc(52 * var(--u));
-  border-radius: 50%;
-  color: var(--text-2);
-  opacity: 0.7;
-  transition:
-    transform 460ms var(--spring),
-    opacity 220ms ease,
-    background-color 220ms ease,
-    color 220ms ease;
+  width: calc(44 * var(--u));
+  height: calc(44 * var(--u));
 }
 .gear-disc svg {
   width: calc(28 * var(--u));
   height: calc(28 * var(--u));
 }
-.gear[data-focused] .gear-label {
-  opacity: 1;
-  transform: none;
+.gear-label {
+  overflow: hidden;
+  max-width: 0;
+  white-space: nowrap;
+  font-size: calc(24 * var(--u));
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  opacity: 0;
+  transition:
+    max-width 420ms var(--ease-out),
+    opacity 200ms ease;
 }
-.gear[data-focused] .gear-disc {
+.gear[data-focused] {
   opacity: 1;
   color: #101014;
   background: rgb(255 255 255 / 0.94);
-  transform: scale(1.18);
+  padding: 0 calc(24 * var(--u)) 0 calc(8 * var(--u));
+  transform: scale(1.06);
   box-shadow: 0 calc(14 * var(--u)) calc(34 * var(--u)) rgb(0 0 0 / 0.45);
+}
+.gear[data-focused] .gear-label {
+  max-width: calc(260 * var(--u));
+  opacity: 1;
+  transition:
+    max-width 420ms var(--ease-out),
+    opacity 260ms ease 80ms;
 }
 
 .clock {
@@ -338,21 +333,6 @@ code {
   letter-spacing: 0.01em;
   color: var(--text-2);
 }
-.clock-date {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 2 * var(--u));
-  white-space: nowrap;
-  font-size: calc(20 * var(--u));
-  font-weight: 500;
-  color: var(--text-3);
-  opacity: 0;
-  transition: opacity 300ms ease;
-}
-.topbar[data-awake] .clock-date {
-  opacity: 1;
-}
-
 /* ---------- dock (rows) ---------- */
 .viewport {
   position: absolute;
