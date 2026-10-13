@@ -5,6 +5,7 @@ import type { Tile } from "@tvdeck/protocol";
 import { expandEnv } from "../config/load.ts";
 import { dataDir, findEdge } from "../paths.ts";
 import { buildWebArgs, resolveUserAgent, webProfileDir } from "./edge.ts";
+import { prepareTvPage, reattach } from "./tvPage.ts";
 
 export interface Target {
   command: string;
@@ -85,6 +86,15 @@ export function targetFor(tile: Tile): Target {
 
 /** Launches a resolved target. The tracker finds the resulting window. */
 export async function launchTarget(tile: Tile, target: Target): Promise<void> {
-  if (tile.type === "web") fs.mkdirSync(webProfileDir(dataDir(), resolveUserAgent(tile.userAgent)), { recursive: true });
+  const ua = tile.type === "web" ? resolveUserAgent(tile.userAgent) : undefined;
+  const profile = tile.type === "web" ? webProfileDir(dataDir(), ua) : null;
+  if (profile) fs.mkdirSync(profile, { recursive: true });
   await spawnDetached(target.command, target.args, tile.title);
+  if (ua && profile) await prepareTvPage(profile, ua, tile.url!);
+}
+
+/** After a tile was opened or focused: keeps the TV user agent applied across server restarts. */
+export async function afterOpen(tile: Tile): Promise<void> {
+  const ua = tile.type === "web" ? resolveUserAgent(tile.userAgent) : undefined;
+  if (ua) await reattach(webProfileDir(dataDir(), ua), ua);
 }

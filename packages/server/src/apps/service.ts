@@ -6,7 +6,7 @@ import { describeWindow, listTopLevelWindows } from "../win32/windows.ts";
 import { backKeysFor } from "./back.ts";
 import { classifyForeground, sameState, type ForegroundState, type FullState } from "./foregroundState.ts";
 import { LAUNCHER_TITLE } from "./edge.ts";
-import { launchTarget, targetFor } from "./launchTile.ts";
+import { afterOpen, launchTarget, targetFor } from "./launchTile.ts";
 import { effectiveMatch, Tracker, type TrackerEnv } from "./tracker.ts";
 import type { KeyName } from "../win32/keymap.ts";
 
@@ -91,6 +91,7 @@ export function createAppService(
       timeoutMs,
       exclude: new Set([getLauncherWindow() ?? 0]),
     });
+    await afterOpen(tile);
   }
 
   return {

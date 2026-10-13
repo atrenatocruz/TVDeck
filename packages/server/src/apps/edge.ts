@@ -46,6 +46,9 @@ export function webProfileDir(dataDir: string, userAgent?: string): string {
   return path.join(dataDir, `edge-apps-${id}`);
 }
 
+/** First page of a TV window; tvPage.ts finds it by this URL, applies the user agent and navigates away. */
+export const TV_PLACEHOLDER = "data:text/html,<title>TVDeck TV</title><body style=background:#000>";
+
 export interface WebArgsOpts {
   dataDir: string;
   url: string;
@@ -59,9 +62,10 @@ export interface WebArgsOpts {
 export function buildWebArgs(o: WebArgsOpts): string[] {
   return [
     `--user-data-dir=${webProfileDir(o.dataDir, o.userAgent)}`,
-    ...(o.userAgent ? [`--user-agent=${o.userAgent}`] : []),
+    // With a user agent the window opens on a placeholder page and tvPage.ts loads the URL after overriding it over DevTools
+    // (random loopback port, recorded in the profile's DevToolsActivePort file).
+    ...(o.userAgent ? [`--user-agent=${o.userAgent}`, "--remote-debugging-port=0", "--disable-sync", `--app=${TV_PLACEHOLDER}`] : [`--app=${o.url}`]),
     ...(o.spatialNav ? ["--enable-spatial-navigation"] : []),
-    `--app=${o.url}`,
     "--start-fullscreen",
     "--no-first-run",
     "--no-default-browser-check",

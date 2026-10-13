@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildLauncherArgs, buildWebArgs, launcherUrl, resolveUserAgent, TV_USER_AGENT } from "./edge.ts";
+import { buildLauncherArgs, buildWebArgs, launcherUrl, resolveUserAgent, TV_PLACEHOLDER, TV_USER_AGENT } from "./edge.ts";
 
 describe("buildLauncherArgs", () => {
   const args = buildLauncherArgs({ dataDir: "C:\\Data\\TVDeck", port: 7420, key: "ab-_c" });
@@ -32,6 +32,9 @@ describe("buildWebArgs with a user agent", () => {
     const args = buildWebArgs({ dataDir: "C:\\Data\\TVDeck", url: "https://www.youtube.com/tv", userAgent: resolveUserAgent("tv") });
     expect(args).toContain("--user-data-dir=C:\\Data\\TVDeck\\edge-apps-tv");
     expect(args).toContain(`--user-agent=${TV_USER_AGENT}`);
+    expect(args).toContain("--remote-debugging-port=0");
+    expect(args).toContain(`--app=${TV_PLACEHOLDER}`);
+    expect(args.some((a) => a.includes("youtube.com"))).toBe(false);
   });
 
   it("hashes custom user agents into a stable profile name", () => {

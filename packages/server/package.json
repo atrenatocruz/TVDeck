@@ -11,7 +11,8 @@
     "spike:m4": "tsx src/spikes/m4.ts",
     "devices": "tsx src/cli/devices.ts",
     "dev:headless": "tsx watch src/main.ts --no-launcher",
-    "spike:spatial": "tsx src/spikes/spatialnav.ts"
+    "spike:spatial": "tsx src/spikes/spatialnav.ts",
+    "spike:tv": "tsx src/spikes/tvua.ts"
   },
   "dependencies": {
     "@tvdeck/protocol": "*",
