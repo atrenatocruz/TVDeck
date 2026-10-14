@@ -85,14 +85,14 @@ An optional top-level `remote` block (next to `rows`) changes what the paired Xi
     "netflix": { "open": "netflix" },
     "prime": { "open": "prime" },
     "apps": "home",
-    "assistant": "none",
+    "assistant": "keyboard",
     "power": "power"
   },
   "hid": { "vendorId": 10007, "productId": 12985 }
 }
 ```
 
-An action is `"home"` (bring the launcher), `"back"` (the per-tile Back), `"power"` (launcher open: close it and the apps TVDeck opened, then sleep the PC; launcher closed: open it), `"none"`, or `{ "open": "<tile id>" }`. A button that opens a tile id that does not exist logs a warning and does nothing. `hid` only needs setting for a different remote model (decimal numbers; the defaults are 0x2717 / 0x32b9). See [SETUP.md](SETUP.md#xiaomi-bluetooth-remote) for pairing and the other buttons.
+An action is `"home"` (bring the launcher), `"back"` (the per-tile Back), `"keyboard"` (open/close the on-screen keyboard; the Assistant button's default), `"power"` (launcher open: close it and the apps TVDeck opened, then sleep the PC; launcher closed: open it), `"none"`, or `{ "open": "<tile id>" }`. A button that opens a tile id that does not exist logs a warning and does nothing. `hid` only needs setting for a different remote model (decimal numbers; the defaults are 0x2717 / 0x32b9). See [SETUP.md](SETUP.md#xiaomi-bluetooth-remote) for pairing and the other buttons.
 
 ## Home screen extras
 
@@ -108,6 +108,7 @@ An optional top-level `home` block:
 | Field | What it does |
 | --- | --- |
 | `welcome` | Text shown top-left on the launcher (up to 80 characters). Leave it out for no message. |
+| `keyboard` | On-screen keyboard: `auto` (default) opens on text fields in apps TVDeck opened, `manual` only with a button mapped to `"keyboard"`, `off`. |
 | `weather.latitude` / `weather.longitude` | Where to show the weather for. The launcher asks [Open-Meteo](https://open-meteo.com) (free, no account) every 15 minutes and shows an icon (sun, moon, partly cloudy, clouds, fog, rain, snow, storm) and the temperature next to the day and time. |
 | `weather.unit` | `celsius` (default) or `fahrenheit`. |
 

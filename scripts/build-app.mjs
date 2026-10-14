@@ -1,4 +1,4 @@
-// Builds app/TVDeck.exe (with the TVDeck icon) from scripts/app/TVDeck.cs: npm run app:build
+// Builds app/TVDeck.exe and app/TVDeckKeyboard.exe (with the TVDeck icon) from scripts/app/*.cs: npm run app:build
 // Uses the .NET Framework C# compiler that ships with Windows, and `sharp` to draw the icon sizes.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -43,18 +43,31 @@ if (!fs.existsSync(csc)) {
   console.error(`C# compiler not found at ${csc}`);
   process.exit(1);
 }
-const exe = path.join(out, "TVDeck.exe");
-execFileSync(
-  csc,
-  [
-    "/nologo",
-    "/target:winexe",
-    "/optimize+",
-    `/win32icon:${ico}`,
-    "/reference:System.Windows.Forms.dll",
-    `/out:${exe}`,
-    path.join(root, "scripts", "app", "TVDeck.cs"),
-  ],
-  { stdio: "inherit" },
+const fx = path.dirname(csc);
+const compile = (name, extraRefs) => {
+  const exe = path.join(out, `${name}.exe`);
+  execFileSync(
+    csc,
+    [
+      "/nologo",
+      "/target:winexe",
+      "/optimize+",
+      "/codepage:65001",
+      `/win32icon:${ico}`,
+      "/reference:System.Windows.Forms.dll",
+      "/reference:System.Drawing.dll",
+      ...extraRefs.map((r) => `/reference:${r}`),
+      `/out:${exe}`,
+      path.join(root, "scripts", "app", `${name}.cs`),
+    ],
+    { stdio: "inherit" },
+  );
+  console.log(`wrote ${path.relative(root, exe)}`);
+};
+
+compile("TVDeck", []);
+// The on-screen keyboard also needs UI Automation (to notice text fields getting focus).
+compile(
+  "TVDeckKeyboard",
+  ["UIAutomationClient.dll", "UIAutomationTypes.dll", "WindowsBase.dll"].map((d) => path.join(fx, "WPF", d)),
 );
-console.log(`wrote ${path.relative(root, exe)}`);

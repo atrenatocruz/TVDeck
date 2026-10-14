@@ -104,6 +104,16 @@ Everything the server prints is also written to `%LOCALAPPDATA%\TVDeck\logs\tvde
 
 `npm run spike:input`, `spike:home` and `spike:m4` are manual checks that open and close their own windows (a throwaway Edge page that records key and mouse events, a stand-in launcher for Home against Notepad, fullscreen Edge and Steam Big Picture). Each prints PASS, FAIL or SKIP per step and never injects input unless its target window is in front. Do not touch the keyboard or mouse while one runs. `TVDECK_DRY_INPUT=1` prints every input as `[dry-input] ...` instead of sending it.
 
+## On-screen keyboard
+
+When a text field (search, e-mail, password…) gets focus inside an app TVDeck opened, a TV keyboard appears at the bottom of the screen. While it is open, the Xiaomi remote's D-pad moves around the keys, OK types the key, and Back closes it; the phone remote's D-pad works the same way. **Enter** sends Enter and closes it. Keys: letters with ç, `⇧` for capitals, `?123` for symbols, `áç` for accented letters, `@`, `.`, `.com`, space and `⌫`. In password fields what you type shows as dots.
+
+- The **Assistant** button on the Xiaomi remote opens/closes it by hand (for fields it can't detect).
+- It never takes the focus from the app, so the text goes straight into the field.
+- `config/tiles.json` → `"home": { "keyboard": "auto" }` (default), `"manual"` (only by button) or `"off"`.
+- How it works: `app\TVDeckKeyboard.exe` (built by `npm run app:build`) watches focus with Windows UI Automation and draws the keyboard; web tiles start Edge with `--force-renderer-accessibility` so fields inside pages are visible to it. After updating, close open web-app windows once so Edge restarts with that option.
+- `npm run spike:keyboard` checks it end to end in a throwaway window.
+
 ## Hiding TVDeck while you use the PC
 
 Settings (press Up from the apps to reach the gear) > **Hide TVDeck** closes the launcher and keeps it closed: it won't reopen by itself. Home or Power on the Xiaomi remote, Home on the phone, or the TVDeck app brings it back. The server keeps running in the background, so the remotes keep working.

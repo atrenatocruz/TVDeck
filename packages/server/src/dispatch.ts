@@ -1,4 +1,5 @@
 import type { ClientMsg, ServerMsg } from "@tvdeck/protocol";
+import { keyboard } from "./keyboard/onScreen.ts";
 import { closeLauncher, findLauncherWindow } from "./apps/launcher.ts";
 import type { AppService } from "./apps/service.ts";
 import { InputGuard } from "./inputGuard.ts";
@@ -65,12 +66,16 @@ export function dispatch(
   }
   switch (msg.type) {
     case "nav":
-      tapKey(msg.dir);
+      if (keyboard.visible()) keyboard.nav(msg.dir);
+      else tapKey(msg.dir);
       break;
     case "button":
-      if (msg.name === "ok") tapKey("enter");
-      else if (msg.name === "back") pressBack(apps);
-      else pressHome(apps);
+      if (msg.name === "ok") keyboard.visible() ? keyboard.ok() : tapKey("enter");
+      else if (msg.name === "back") keyboard.visible() ? keyboard.back() : pressBack(apps);
+      else {
+        keyboard.hide();
+        pressHome(apps);
+      }
       break;
     case "media":
       tapKey(MEDIA[msg.action]);

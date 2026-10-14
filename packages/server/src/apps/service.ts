@@ -36,6 +36,8 @@ export interface AppService {
   noteHome(): void;
   /** Closes every app window TVDeck opened (WM_CLOSE, like clicking X). Returns how many. */
   closeAll(): number;
+  /** Is this window one of the apps TVDeck opened? */
+  isApp(hwnd: number): boolean;
   start(): void;
   stop(): void;
 }
@@ -113,6 +115,7 @@ export function createAppService(
     state: () => toMsg(last),
     refresh,
     noteHome: () => void (homeAt = Date.now()),
+    isApp: (hwnd) => tracker.tileOf(hwnd) !== undefined,
     closeAll() {
       const hwnds = [...tracker.trackedHwnds()];
       for (const h of hwnds) native.PostMessage(h, WM_CLOSE, 0, 0);

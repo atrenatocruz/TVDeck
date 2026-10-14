@@ -66,6 +66,8 @@ export function buildWebArgs(o: WebArgsOpts): string[] {
     // (random loopback port, recorded in the profile's DevToolsActivePort file).
     ...(o.userAgent ? [`--user-agent=${o.userAgent}`, "--remote-debugging-port=0", "--disable-sync", `--app=${TV_PLACEHOLDER}`] : [`--app=${o.url}`]),
     ...(o.spatialNav ? ["--enable-spatial-navigation"] : []),
+    // Lets UI Automation see focused text fields inside pages, so the on-screen keyboard can open.
+    "--force-renderer-accessibility",
     "--start-fullscreen",
     "--no-first-run",
     "--no-default-browser-check",

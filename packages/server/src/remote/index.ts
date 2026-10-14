@@ -1,4 +1,6 @@
 import type { Tile, TilesConfig } from "@tvdeck/protocol";
+import { keyboard } from "../keyboard/onScreen.ts";
+import type { KeyName } from "../win32/keymap.ts";
 import type { AppService } from "../apps/service.ts";
 import { pressBack, pressHome, pressPower } from "../dispatch.ts";
 import { InputGuard } from "../inputGuard.ts";
@@ -27,12 +29,19 @@ export function startRemoteSupport(
   const dry = DRY();
   const home = () => (dry ? log.info("remote", "[dry] home") : pressHome(apps));
   const back = () => pressBack(apps); // chord() already honours TVDECK_DRY_INPUT
-  const power = () => (dry ? log.info("remote", "[dry] power") : pressPower(apps));
+  const power = () => (dry ? log.info("remote", "[dry] power") : (keyboard.hide(), pressPower(apps)));
+  // While the on-screen keyboard is open, the D-pad, OK and Back drive it instead of the app.
+  const tap = (k: KeyName) => {
+    if (keyboard.visible() && (k === "up" || k === "down" || k === "left" || k === "right")) return keyboard.nav(k);
+    if (keyboard.visible() && k === "enter") return keyboard.ok();
+    tapKey(k);
+  };
   const buttons = new RemoteButtons({
-    tap: tapKey,
-    home,
-    back,
+    tap,
+    home: () => (keyboard.hide(), home()),
+    back: () => (keyboard.visible() ? keyboard.back() : back()),
     power,
+    keyboard: () => keyboard.toggle(),
     open: async (id) => {
       if (dry) return log.info("remote", `[dry] open ${id}`);
       await apps.open(id);

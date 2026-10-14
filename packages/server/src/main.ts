@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { keyboard } from "./keyboard/onScreen.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Devices, watchDevices } from "./auth/devices.ts";
@@ -91,6 +92,10 @@ async function main() {
     apps,
   );
   const stopHomeRequests = watchHomeRequests(dataDir(), () => pressHome(apps));
+  keyboard.start({
+    mode: () => tiles.current().config.home?.keyboard ?? "auto",
+    isTvdeckApp: (hwnd) => apps.isApp(hwnd),
+  });
   if (noLauncher) log.info("launcher", "auto-launch disabled (--no-launcher)");
   else {
     void ensureLauncher(port, launcherKey).catch((e) => log.error("launcher", e instanceof Error ? e.message : String(e)));
@@ -101,6 +106,7 @@ async function main() {
     log.info("main", "shutting down");
     stopWatchdog();
     stopHomeRequests();
+    keyboard.stop();
     remoteSupport.stop();
     apps.stop();
     ws.close();

@@ -14,7 +14,8 @@
     "spike:spatial": "tsx src/spikes/spatialnav.ts",
     "spike:tv": "tsx src/spikes/tvua.ts",
     "remote:probe": "tsx src/remote/probe.ts",
-    "spike:keys": "tsx src/spikes/keys.ts"
+    "spike:keys": "tsx src/spikes/keys.ts",
+    "spike:keyboard": "tsx src/spikes/keyboard.ts"
   },
   "dependencies": {
     "@tvdeck/protocol": "*",

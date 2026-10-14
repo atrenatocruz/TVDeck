@@ -9,6 +9,7 @@ function make(over: Partial<ButtonDeps> = {}) {
     home: () => void calls.push("home"),
     back: () => void calls.push("back"),
     power: () => void calls.push("power"),
+    keyboard: () => void calls.push("keyboard"),
     open: async (id) => void calls.push(`open:${id}`),
     hasTile: (id) => id !== "ghost",
     buttons: () => DEFAULT_BUTTONS,
@@ -80,7 +81,7 @@ describe("RemoteButtons", () => {
     b.press("prime");
     b.press("apps");
     b.press("assistant");
-    expect(calls).toEqual(["open:netflix", "open:prime", "home"]);
+    expect(calls).toEqual(["open:netflix", "open:prime", "home", "keyboard"]);
   });
   it("warns for a missing tile", () => {
     const { b, calls } = make({ buttons: () => ({ ...DEFAULT_BUTTONS, prime: { open: "ghost" } }) });

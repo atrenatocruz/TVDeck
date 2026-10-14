@@ -33,10 +33,11 @@ export const Row = z.object({
 
 /**
  * What a physical remote button does: bring the launcher, send Back, nothing, open a tile, or "power"
- * (launcher open: close it and the apps, then sleep the PC; launcher closed: open it).
+ * (launcher open: close it and the apps, then sleep the PC; launcher closed: open it), or "keyboard"
+ * (open/close the on-screen keyboard).
  */
 export const RemoteAction = z.union([
-  z.enum(["home", "back", "none", "power"]),
+  z.enum(["home", "back", "none", "power", "keyboard"]),
   z.object({ open: z.string().min(1) }).strict(),
 ]);
 
@@ -66,6 +67,8 @@ export const RemoteConfig = z
 /** Home screen extras: a welcome line and the weather for a place (Open-Meteo, no account needed). */
 export const HomeConfig = z.object({
   welcome: z.string().max(80).optional(),
+  /** On-screen keyboard: "auto" opens on text fields in TVDeck apps (default), "manual" only by button. */
+  keyboard: z.enum(["auto", "manual", "off"]).optional(),
   weather: z
     .object({
       latitude: z.number().min(-90).max(90),
